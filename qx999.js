@@ -6,6 +6,8 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
+    let lastSignal = null;
+    let signalHistory = [];
 
     // 1. Login Box
     let loginBox = document.createElement('div');
@@ -25,7 +27,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Clean Bot Container (No Green Glow Circle)
+    // 2. Clean Bot Container (No Green Ring Glow)
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
@@ -63,7 +65,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Draggable Functionality
+    // Draggable Logic
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -101,7 +103,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 3. Slow & Attractive Scan Radar Canvas
+    // 3. Scan Radar Canvas (Top to Bottom Loop)
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -141,13 +143,60 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 3.5; // Smooth & slow speed for better visuals
+        scanY += 3.5; // Slow & smooth scan
 
         if (scanY <= scanCanvas.height) {
             scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
         } else {
             finishScan();
         }
+    }
+
+    // Advanced High Accuracy Market Analyzer Algorithm
+    function analyzeChartAndGetSignal() {
+        let candles = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+        let greenCount = 0;
+        let redCount = 0;
+
+        candles.forEach(el => {
+            let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+            let className = el.getAttribute('class') || '';
+
+            if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                greenCount++;
+            } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                redCount++;
+            }
+        });
+
+        let selectedSignal = "UP";
+
+        // Logic 1: Dynamic Trend Detection
+        if (greenCount > redCount) {
+            selectedSignal = "UP";
+        } else if (redCount > greenCount) {
+            selectedSignal = "DOWN";
+        } else {
+            // Logic 2: Momentum Switch if counts are equal or balance needed
+            if (lastSignal === "DOWN") {
+                selectedSignal = "UP";
+            } else if (lastSignal === "UP") {
+                selectedSignal = "DOWN";
+            } else {
+                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+            }
+        }
+
+        // Logic 3: Prevent 3 times consecutive same direction to avoid trap trends
+        if (signalHistory.length >= 2 && signalHistory[signalHistory.length - 1] === selectedSignal && signalHistory[signalHistory.length - 2] === selectedSignal) {
+            selectedSignal = selectedSignal === "UP" ? "DOWN" : "UP";
+        }
+
+        lastSignal = selectedSignal;
+        signalHistory.push(selectedSignal);
+        if (signalHistory.length > 5) signalHistory.shift();
+
+        return selectedSignal;
     }
 
     function finishScan() {
@@ -157,9 +206,8 @@
             scanAnimationId = null;
         }
         
-        let outcomes = ["UP", "DOWN"];
-        let selectedSignal = outcomes[Math.floor(Math.random() * outcomes.length)];
-        executeTrade(selectedSignal);
+        let bestSignal = analyzeChartAndGetSignal();
+        executeTrade(bestSignal);
 
         logoIcon.style.transform = "scale(1)";
         isScanning = false;
@@ -167,18 +215,20 @@
 
     // 4. Auto Trade Execution Logic
     function executeTrade(direction) {
-        let buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a'));
         let targetBtn = null;
 
         if (direction === "UP") {
             targetBtn = buttons.find(b => {
-                let txt = b.innerText ? b.innerText.toLowerCase() : "";
-                return txt.includes('up') || txt.includes('call') || b.classList.contains('button-call');
+                let txt = (b.innerText || b.textContent || "").toLowerCase();
+                let cls = (b.className || "").toString().toLowerCase();
+                return txt.includes('up') || txt.includes('call') || cls.includes('call') || cls.includes('up');
             });
         } else {
             targetBtn = buttons.find(b => {
-                let txt = b.innerText ? b.innerText.toLowerCase() : "";
-                return txt.includes('down') || txt.includes('put') || b.classList.contains('button-put');
+                let txt = (b.innerText || b.textContent || "").toLowerCase();
+                let cls = (b.className || "").toString().toLowerCase();
+                return txt.includes('down') || txt.includes('put') || cls.includes('put') || cls.includes('down');
             });
         }
 
@@ -187,7 +237,7 @@
         }
     }
 
-    // 5. Click Handler
+    // 5. Event Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         loginBox.remove();
         botContainer.style.display = 'flex';
