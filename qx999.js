@@ -1,59 +1,31 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-signal-box'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
-    let scanDurationSec = 4; 
-    let isConfigured = false;
-    let lastTradeSignal = null;
 
     // 1. Login Box
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: rgba(12, 24, 18, 0.95); border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 25px 20px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0,255,102,0.25); z-index: 999999;
-        font-family: Arial, sans-serif; text-align: center; backdrop-filter: blur(5px);
+        width: 300px; background: #08140c; border: 2px solid #00ff66;
+        color: #ffffff; padding: 20px; border-radius: 15px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.4); z-index: 999999;
+        font-family: Arial, sans-serif; text-align: center;
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 8px 0; color:#00ff66; font-size:22px; font-weight:bold;">QX999 Login</h3>
-        <p style="font-size:13px; color:#cccccc; margin-bottom:18px;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${licenseKey}" readonly style="width:100%; padding:12px; background:#162b20; color:#fff; border:1px solid #1e3d2d; border-radius:10px; box-sizing:border-box; margin-bottom:20px; text-align:center; font-size:16px; outline:none;">
-        <button id="qx_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer;">Enter</button>
+        <h3 style="margin:0 0 5px 0; color:#00ff66; font-size:20px;">QX999 LOGIN</h3>
+        <p style="font-size:12px; color:#aaa; margin-bottom:15px;">Enter password to start</p>
+        <input type="password" id="qx_pass" value="${licenseKey}" readonly style="width:100%; padding:10px; background:#112e1f; color:#fff; border:1px solid #00ff66; border-radius:8px; box-sizing:border-box; margin-bottom:15px; text-align:center; font-size:15px; outline:none;">
+        <button id="qx_login_btn" style="width:100%; padding:10px; background:#00ff66; color:#000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">START BOT</button>
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Settings Panel
-    let settingsBox = document.createElement('div');
-    settingsBox.id = 'qx999-settings';
-    settingsBox.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: rgba(12, 24, 18, 0.95); border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 20px; border-radius: 18px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.25); z-index: 999999;
-        font-family: Arial, sans-serif; display: none; backdrop-filter: blur(5px);
-    `;
-    settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
-        
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Analysis Delay (Sec):</label>
-        <input type="number" id="qx_delay" value="4" min="1" style="width:100%; padding:10px; background:#162b20; color:#fff; border:1px solid #1e3d2d; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
-        
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
-        <select id="qx_mode" style="width:100%; padding:10px; background:#162b20; color:#fff; border:1px solid #1e3d2d; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Dynamic Trade (High Accuracy)</option>
-        </select>
-        
-        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
-    `;
-    document.body.appendChild(settingsBox);
-
-    // 3. Bot Container (No Green Glow - Exact match with uploaded image)
+    // 2. Clean Bot Container (No Green Glow Circle)
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
@@ -62,30 +34,36 @@
         z-index: 999999; cursor: move; user-select: none;
         touch-action: none;
     `;
+    
+    let logoWrapper = document.createElement('div');
+    logoWrapper.style.cssText = `
+        position: relative; width: 65px; height: 65px;
+        display: flex; align-items: center; justify-content: center;
+    `;
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
     logoIcon.style.cssText = `
         width: 60px; height: 60px;
         background: url('${logoUrl}') center/cover no-repeat;
-        border-radius: 50%;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+        border-radius: 50%; border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        transition: transform 0.2s ease;
     `;
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 5px;
+        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 5px;
         text-shadow: 0 0 6px #000, 0 0 3px #000; font-family: Arial, sans-serif;
-        letter-spacing: 0.5px;
     `;
     logoText.innerText = "QX999";
 
-    botContainer.appendChild(logoIcon);
+    logoWrapper.appendChild(logoIcon);
+    botContainer.appendChild(logoWrapper);
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Draggable Logic
+    // Draggable Functionality
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -123,7 +101,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Smooth Scan Line Canvas
+    // 3. Slow & Attractive Scan Radar Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -140,17 +118,9 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, scanY = 0, isScanning = false;
 
     function drawSmokeScanLine() {
-        let currentTime = Date.now();
-        let elapsedSec = (currentTime - scanStartTime) / 1000;
-
-        if (elapsedSec >= scanDurationSec) {
-            finishScan();
-            return;
-        }
-
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
         
         let trailHeight = 90;
@@ -171,12 +141,13 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 3.5;
-        if (scanY > scanCanvas.height) {
-            scanY = 0;
-        }
+        scanY += 3.5; // Smooth & slow speed for better visuals
 
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        if (scanY <= scanCanvas.height) {
+            scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        } else {
+            finishScan();
+        }
     }
 
     function finishScan() {
@@ -186,25 +157,15 @@
             scanAnimationId = null;
         }
         
-        let greenElements = document.querySelectorAll("[class*='green'], [class*='call'], [style*='255']").length;
-        let redElements = document.querySelectorAll("[class*='red'], [class*='put'], [style*='235']").length;
-        
-        let nextSignal = "UP";
+        let outcomes = ["UP", "DOWN"];
+        let selectedSignal = outcomes[Math.floor(Math.random() * outcomes.length)];
+        executeTrade(selectedSignal);
 
-        if (greenElements > redElements) {
-            nextSignal = "UP";
-        } else if (redElements > greenElements) {
-            nextSignal = "DOWN";
-        } else {
-            nextSignal = (lastTradeSignal === "UP") ? "DOWN" : "UP";
-        }
-
-        lastTradeSignal = nextSignal;
-        executeTrade(nextSignal);
+        logoIcon.style.transform = "scale(1)";
         isScanning = false;
     }
 
-    // 5. Direct Auto Trade Trigger
+    // 4. Auto Trade Execution Logic
     function executeTrade(direction) {
         let buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
         let targetBtn = null;
@@ -226,35 +187,20 @@
         }
     }
 
-    // 6. Navigation Event Logic
+    // 5. Click Handler
     document.getElementById('qx_login_btn').onclick = function () {
         loginBox.remove();
         botContainer.style.display = 'flex';
     };
 
-    document.getElementById('qx_save_btn').onclick = function () {
-        let delayInput = parseInt(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput > 0) {
-            scanDurationSec = delayInput;
-        }
-        settingsBox.style.display = 'none';
-        isConfigured = true;
-    };
-
     botContainer.addEventListener('click', function () {
-        if (isDragging) return;
-
-        if (!isConfigured) {
-            settingsBox.style.display = 'block';
-            return;
-        }
-
-        if (isScanning) return;
+        if (isDragging || isScanning) return;
 
         isScanning = true;
+        logoIcon.style.transform = "scale(1.1)";
+        
         scanCanvas.style.display = 'block';
         scanY = 0;
-        scanStartTime = Date.now();
         drawSmokeScanLine();
     });
 })();
