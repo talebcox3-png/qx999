@@ -8,6 +8,7 @@
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     let scanDurationSec = 4; 
     let isConfigured = false;
+    let lastTradeSignal = null;
 
     // 1. Login Box
     let loginBox = document.createElement('div');
@@ -45,14 +46,14 @@
         
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#162b20; color:#fff; border:1px solid #1e3d2d; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade (High Accuracy)</option>
+            <option value="AI">AI Dynamic Trade (High Accuracy)</option>
         </select>
         
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Bot Container (Semi-transparent Shadow to view Chart)
+    // 3. Bot Container (No Green Glow - Exact match with uploaded image)
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
@@ -68,14 +69,15 @@
         width: 60px; height: 60px;
         background: url('${logoUrl}') center/cover no-repeat;
         border-radius: 50%;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 255, 102, 0.2);
-        opacity: 0.92;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
     `;
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 5px;
-        text-shadow: 0 0 6px #000; font-family: Arial, sans-serif;
+        color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 5px;
+        text-shadow: 0 0 6px #000, 0 0 3px #000; font-family: Arial, sans-serif;
+        letter-spacing: 0.5px;
     `;
     logoText.innerText = "QX999";
 
@@ -121,7 +123,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Slow, Smooth Top-to-Bottom Loop Scan Line Canvas
+    // 4. Smooth Scan Line Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -151,11 +153,11 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
         
-        let trailHeight = 100;
+        let trailHeight = 90;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.1)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.35)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.4)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
@@ -169,7 +171,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 3.5; // Reduced speed for slow & attractive scanning
+        scanY += 3.5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -184,30 +186,39 @@
             scanAnimationId = null;
         }
         
-        // Smart Market Filter for high accuracy
-        let greenCandles = document.querySelectorAll("[class*='green'], [class*='call'], [style*='rgb(0, 255']").length;
-        let redCandles = document.querySelectorAll("[class*='red'], [class*='put'], [style*='rgb(255, 0']").length;
+        let greenElements = document.querySelectorAll("[class*='green'], [class*='call'], [style*='255']").length;
+        let redElements = document.querySelectorAll("[class*='red'], [class*='put'], [style*='235']").length;
         
-        let selectedSignal = "UP";
-        if (redCandles > greenCandles) {
-            selectedSignal = "DOWN";
-        } else if (greenCandles === redCandles) {
-            selectedSignal = Math.random() > 0.45 ? "UP" : "DOWN";
+        let nextSignal = "UP";
+
+        if (greenElements > redElements) {
+            nextSignal = "UP";
+        } else if (redElements > greenElements) {
+            nextSignal = "DOWN";
+        } else {
+            nextSignal = (lastTradeSignal === "UP") ? "DOWN" : "UP";
         }
 
-        executeTrade(selectedSignal);
+        lastTradeSignal = nextSignal;
+        executeTrade(nextSignal);
         isScanning = false;
     }
 
-    // 5. Auto Trade Trigger
+    // 5. Direct Auto Trade Trigger
     function executeTrade(direction) {
-        let buttons = Array.from(document.querySelectorAll('button'));
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = buttons.find(b => b.innerText.includes('Up') || b.innerText.includes('Call') || b.classList.contains('button-call'));
+            targetBtn = buttons.find(b => {
+                let txt = b.innerText ? b.innerText.toLowerCase() : "";
+                return txt.includes('up') || txt.includes('call') || b.classList.contains('button-call');
+            });
         } else {
-            targetBtn = buttons.find(b => b.innerText.includes('Down') || b.innerText.includes('Put') || b.classList.contains('button-put'));
+            targetBtn = buttons.find(b => {
+                let txt = b.innerText ? b.innerText.toLowerCase() : "";
+                return txt.includes('down') || txt.includes('put') || b.classList.contains('button-put');
+            });
         }
 
         if (targetBtn) {
