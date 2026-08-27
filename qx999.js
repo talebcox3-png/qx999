@@ -6,108 +6,59 @@
 
     const licenseKey = "Alvi1234";
     const logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
-    let scanDurationSec = 4;
+    let scanDurationSec = 5; // 5 Sec Setup
     let isConfigured = false;
-    let lastSignal = null;
-    let signalHistory = [];
+    let isScanning = false;
+    let greenCandleScore = 0;
+    let redCandleScore = 0;
+    let fastScanner = null;
 
-    // CSS Insert
+    // Insert CSS Styles
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-bot-container {
-            position: fixed;
-            top: 150px;
-            right: 20px;
-            z-index: 999999;
-            font-family: Arial, sans-serif;
-            user-select: none;
-            touch-action: none;
-            display: none;
-            flex-direction: column;
-            align-items: center;
+            position: fixed; top: 150px; right: 20px; z-index: 999999;
+            font-family: Arial, sans-serif; user-select: none; touch-action: none;
+            display: none; flex-direction: column; align-items: center;
         }
         #qx999-icon-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
         }
         #qx999-icon {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
+            width: 65px; height: 65px; border-radius: 50%;
             background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(3px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.75);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; transition: box-shadow 0.3s ease;
         }
         #qx999-icon.glowing {
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.8);
-            transform: scale(1.08);
+            box-shadow: 0 0 25px #00ff66, inset 0 0 10px #00ff66 !important;
         }
         #qx999-icon img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            pointer-events: none;
+            width: 100%; height: 100%; border-radius: 50%;
+            object-fit: cover; pointer-events: none;
         }
         #qx999-icon-wrapper span {
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: bold;
-            margin-top: 5px;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            pointer-events: none;
+            color: #ffffff; font-size: 13px; font-weight: bold;
+            margin-top: 5px; letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9); pointer-events: none;
         }
         .qx999-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(9, 18, 12, 0.95);
-            border: 1.5px solid #00ff66;
-            border-radius: 16px;
-            width: 310px;
-            padding: 22px;
-            color: #fff;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
-            z-index: 1000000;
-            font-family: Arial, sans-serif;
-            backdrop-filter: blur(8px);
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(9, 18, 12, 0.95); border: 1.5px solid #00ff66;
+            border-radius: 16px; width: 310px; padding: 22px; color: #fff;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9); z-index: 1000000;
+            font-family: Arial, sans-serif; backdrop-filter: blur(8px);
         }
         .qx999-btn {
-            width: 100%;
-            padding: 12px;
-            background: #00ff66;
-            color: #000;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.2s;
-        }
-        .qx999-btn:hover {
-            background: #00cc52;
+            width: 100%; padding: 12px; background: #00ff66; color: #000;
+            border: none; border-radius: 10px; font-weight: bold;
+            font-size: 15px; cursor: pointer; margin-top: 10px;
         }
         .qx999-input, .qx999-select {
-            width: 100%;
-            padding: 10px;
-            background: #12291d;
-            color: #fff;
-            border: 1px solid #1e4530;
-            border-radius: 8px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            outline: none;
-            font-size: 14px;
+            width: 100%; padding: 10px; background: #12291d; color: #fff;
+            border: 1px solid #1e4530; border-radius: 8px; box-sizing: border-box;
+            margin-bottom: 15px; outline: none; font-size: 14px;
         }
     `;
     document.head.appendChild(style);
@@ -124,24 +75,24 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Settings Modal
+    // 2. Settings Modal (Configured for 5 Sec Trades)
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings-modal';
     settingsBox.className = 'qx999-modal';
     settingsBox.style.display = 'none';
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Analysis Delay (Sec):</label>
-        <input type="number" id="qx_delay" value="${scanDurationSec}" min="1" class="qx999-input">
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">5-Second Bot Settings</h3>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Expiry/Scan Time (Sec):</label>
+        <input type="number" id="qx_delay" value="5" readonly class="qx999-input">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Mode:</label>
         <select id="qx_mode" class="qx999-select">
-            <option value="AI">AI Dynamic High Accuracy</option>
+            <option value="AI">Ultra-Fast Momentum Analysis</option>
         </select>
         <button id="qx_save_btn" class="qx999-btn">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Bot Container Element
+    // 3. Bot Main Icon Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-bot-container';
     botContainer.innerHTML = `
@@ -156,45 +107,38 @@
 
     let logoIcon = document.getElementById('qx999-icon');
 
-    // Draggable Functionality
+    // Draggable Touch & Mouse Logic
     let isDragging = false, startX, startY, initialX, initialY;
-    
     function dragStart(e) {
         isDragging = false;
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = clientX;
-        startY = clientY;
-        initialX = botContainer.offsetLeft;
-        initialY = botContainer.offsetTop;
+        startX = clientX; startY = clientY;
+        initialX = botContainer.offsetLeft; initialY = botContainer.offsetTop;
         document.addEventListener('mousemove', dragMove);
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('mouseup', dragEnd);
         document.addEventListener('touchend', dragEnd);
     }
-
     function dragMove(e) {
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        let dx = clientX - startX;
-        let dy = clientY - startY;
+        let dx = clientX - startX; let dy = clientY - startY;
         if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
         botContainer.style.left = (initialX + dx) + 'px';
         botContainer.style.top = (initialY + dy) + 'px';
         botContainer.style.right = 'auto';
     }
-
     function dragEnd() {
         document.removeEventListener('mousemove', dragMove);
         document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('mouseup', dragEnd);
         document.removeEventListener('touchend', dragEnd);
     }
-
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Smooth Scan Line Canvas
+    // 4. Smooth Scan Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -211,7 +155,27 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, scanY = 0, scanStartTime = 0;
+
+    // Fast 50ms Real-Time Chart Scanner
+    function runFastChartAnalysis() {
+        greenCandleScore = 0;
+        redCandleScore = 0;
+
+        fastScanner = setInterval(() => {
+            let chartElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            chartElements.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenCandleScore++;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redCandleScore++;
+                }
+            });
+        }, 50);
+    }
 
     function drawSmokeScanLine() {
         let currentTime = Date.now();
@@ -242,7 +206,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 3.5;
+        scanY += 4.5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -250,65 +214,21 @@
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
 
-    // High Accuracy Market Algorithm Logic
-    function analyzeChartAndGetSignal() {
-        let candles = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-        let greenCount = 0;
-        let redCount = 0;
-
-        candles.forEach(el => {
-            let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-            let className = el.getAttribute('class') || '';
-
-            if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                greenCount++;
-            } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                redCount++;
-            }
-        });
-
-        let selectedSignal = "UP";
-
-        if (greenCount > redCount) {
-            selectedSignal = "UP";
-        } else if (redCount > greenCount) {
-            selectedSignal = "DOWN";
-        } else {
-            if (lastSignal === "DOWN") {
-                selectedSignal = "UP";
-            } else if (lastSignal === "UP") {
-                selectedSignal = "DOWN";
-            } else {
-                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
-            }
-        }
-
-        if (signalHistory.length >= 2 && signalHistory[signalHistory.length - 1] === selectedSignal && signalHistory[signalHistory.length - 2] === selectedSignal) {
-            selectedSignal = selectedSignal === "UP" ? "DOWN" : "UP";
-        }
-
-        lastSignal = selectedSignal;
-        signalHistory.push(selectedSignal);
-        if (signalHistory.length > 5) signalHistory.shift();
-
-        return selectedSignal;
-    }
-
     function finishScan() {
+        if (fastScanner) clearInterval(fastScanner);
         scanCanvas.style.display = 'none';
         if (scanAnimationId) {
             cancelAnimationFrame(scanAnimationId);
             scanAnimationId = null;
         }
         
-        let bestSignal = analyzeChartAndGetSignal();
-        executeTrade(bestSignal);
-
+        let targetSignal = greenCandleScore >= redCandleScore ? "UP" : "DOWN";
+        executeTrade(targetSignal);
         logoIcon.classList.remove('glowing');
         isScanning = false;
     }
 
-    // Auto Trade Execution
+    // Auto Execution Engine
     function executeTrade(direction) {
         let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a'));
         let targetBtn = null;
@@ -332,17 +252,13 @@
         }
     }
 
-    // Navigation & Click Handlers
+    // Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         loginBox.remove();
         botContainer.style.display = 'flex';
     };
 
     document.getElementById('qx_save_btn').onclick = function () {
-        let delayInput = parseInt(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput > 0) {
-            scanDurationSec = delayInput;
-        }
         settingsBox.style.display = 'none';
         isConfigured = true;
     };
@@ -362,6 +278,7 @@
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
+        runFastChartAnalysis();
         drawSmokeScanLine();
     });
 })();
