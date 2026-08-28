@@ -1,11 +1,29 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-login'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-login', 'qx999-style'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
+
+    const style = document.createElement('style');
+    style.id = 'qx999-style';
+    style.innerHTML = `
+        @keyframes qxGlow {
+            0% { box-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66, inset 0 0 15px #00ff66; transform: scale(1); }
+            50% { box-shadow: 0 0 25px #00ff66, 0 0 50px #00ff66, inset 0 0 25px #00ff66; transform: scale(1.08); }
+            100% { box-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66, inset 0 0 15px #00ff66; transform: scale(1); }
+        }
+        @keyframes qxScanPulse {
+            0% { box-shadow: 0 0 0 0px rgba(0, 255, 102, 0.8); }
+            100% { box-shadow: 0 0 0 80px rgba(0, 255, 102, 0); }
+        }
+        .qx-analyzing {
+            animation: qxGlow 1s infinite ease-in-out, qxScanPulse 1.2s infinite linear !important;
+        }
+    `;
+    document.head.appendChild(style);
 
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
     let isAnalyzing = false;
@@ -14,16 +32,17 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 300px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 300px; background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
         color: #ffffff; padding: 25px 20px; border-radius: 15px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.2); z-index: 999999;
+        box-shadow: 0 0 30px rgba(0,255,102,0.3); z-index: 999999;
         font-family: sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        backdrop-filter: blur(10px);
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 10px 0; color:#00ff66; font-size:20px;">QX999 3-Sec SureShot</h3>
-        <p style="font-size:12px; color:#ccc; margin:0 0 15px 0;">Enter License Password</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; margin-bottom:12px; font-size:15px; outline:none; text-align:center;">
-        <button id="qx_login_btn" style="width:100%; padding:10px; background:#00ff66; color:#000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">Activate Bot</button>
+        <h3 style="margin:0 0 10px 0; color:#00ff66; font-size:22px; font-weight:bold;">QX999 Login</h3>
+        <p style="font-size:12px; color:#ccc; margin:0 0 15px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; margin-bottom:15px; font-size:16px; outline:none; text-align:center; box-sizing:border-box;">
+        <button id="qx_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -36,23 +55,23 @@
     `;
 
     let logoIcon = document.createElement('div');
+    logoIcon.id = 'qx999-icon-main';
     logoIcon.style.cssText = `
         width: 65px; height: 65px;
         background: url('${logoUrl}') center/cover no-repeat;
         border-radius: 50%; border: 2.5px solid #00ff66;
-        box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
         display: flex; align-items: center; justify-content: center;
-        color: #00ff66; font-weight: bold; font-size: 22px; font-family: sans-serif;
-        text-shadow: 0 0 5px #000;
+        color: #ffffff; font-weight: bold; font-size: 24px; font-family: sans-serif;
+        text-shadow: 0 0 8px #000; transition: all 0.3s ease;
     `;
 
     let logoText = document.createElement('span');
-    logoText.id = 'qx999-btn-label';
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 11px; margin-top: 5px;
+        color: #ffffff; font-weight: bold; font-size: 12px; margin-top: 6px;
         text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: sans-serif;
     `;
-    logoText.innerText = "TAP FOR 3S";
+    logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -88,71 +107,77 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    function analyzeMarket() {
-        let greenCount = 0;
-        let redCount = 0;
+    function analyzeCandleMomentum() {
+        let greenScore = 0;
+        let redScore = 0;
 
         let elements = document.querySelectorAll("path, rect");
         elements.forEach(el => {
             if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login')) return;
             let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || '').toLowerCase();
 
-            if (fill.includes('26a69a') || fill.includes('00e676') || fill.includes('0, 255')) greenCount++;
-            else if (fill.includes('ef5350') || fill.includes('ff5252') || fill.includes('255, 0')) redCount++;
+            if (fill.includes('26a69a') || fill.includes('00e676') || fill.includes('0, 255')) greenScore++;
+            else if (fill.includes('ef5350') || fill.includes('ff5252') || fill.includes('255, 0')) redScore++;
         });
 
-        return greenCount >= redCount ? "UP" : "DOWN";
+        return greenScore >= redScore ? "UP" : "DOWN";
     }
 
-    function triggerTrade(signal) {
-        let callButtons = document.querySelectorAll('.btn-call, button.call, div[class*="call"], .button-up, button[class*="up"]');
-        let putButtons = document.querySelectorAll('.btn-put, button.put, div[class*="put"], .button-down, button[class*="down"]');
+    function executeTrade(signal) {
+        let targetButton = null;
 
-        let target = null;
         if (signal === "UP") {
-            target = Array.from(callButtons).find(el => !el.closest('#qx999-circle-bot'));
+            targetButton = document.querySelector('.btn-call, button.call, div[class*="call"], .button-up, button[class*="up"]') ||
+                           Array.from(document.querySelectorAll('button, div[role="button"], div')).find(el => {
+                               if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login')) return false;
+                               let txt = (el.innerText || el.textContent || "").trim().toLowerCase();
+                               return txt === "up" || txt.includes("call");
+                           });
         } else {
-            target = Array.from(putButtons).find(el => !el.closest('#qx999-circle-bot'));
+            targetButton = document.querySelector('.btn-put, button.put, div[class*="put"], .button-down, button[class*="down"]') ||
+                           Array.from(document.querySelectorAll('button, div[role="button"], div')).find(el => {
+                               if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login')) return false;
+                               let txt = (el.innerText || el.textContent || "").trim().toLowerCase();
+                               return txt === "down" || txt.includes("put");
+                           });
         }
 
-        if (!target) {
-            let allBtns = Array.from(document.querySelectorAll('button, div[role="button"]'));
-            target = allBtns.find(b => {
-                if (b.closest('#qx999-circle-bot') || b.closest('#qx999-login')) return false;
-                let text = (b.innerText || b.textContent || "").toLowerCase().trim();
-                return signal === "UP" ? (text === "call" || text === "up") : (text === "put" || text === "down");
-            });
-        }
-
-        if (target) {
-            target.click();
+        if (targetButton) {
+            targetButton.click();
+            let eventOptions = { bubbles: true, cancelable: true, view: window };
+            targetButton.dispatchEvent(new MouseEvent('mousedown', eventOptions));
+            targetButton.dispatchEvent(new MouseEvent('mouseup', eventOptions));
+            targetButton.dispatchEvent(new MouseEvent('click', eventOptions));
+            targetButton.dispatchEvent(new TouchEvent('touchstart', eventOptions));
+            targetButton.dispatchEvent(new TouchEvent('touchend', eventOptions));
         }
     }
 
-    function start3SecAnalysis() {
+    function startAnalysis() {
         if (isAnalyzing) return;
         isAnalyzing = true;
 
+        logoIcon.classList.add('qx-analyzing');
         let timeLeft = 3;
         logoIcon.innerText = timeLeft;
-        logoText.innerText = "ANALYZING...";
 
-        let timer = setInterval(() => {
+        let interval = setInterval(() => {
             timeLeft--;
             if (timeLeft > 0) {
                 logoIcon.innerText = timeLeft;
             } else {
-                clearInterval(timer);
+                clearInterval(interval);
                 
-                let finalSignal = analyzeMarket();
-                triggerTrade(finalSignal);
+                let signal = analyzeCandleMomentum();
+                executeTrade(signal);
 
+                logoIcon.classList.remove('qx-analyzing');
                 logoIcon.innerText = "✓";
-                logoText.innerText = finalSignal + " PLACED!";
+                logoText.innerText = signal + " PLACED!";
 
                 setTimeout(() => {
                     logoIcon.innerText = "";
-                    logoText.innerText = "TAP FOR 3S";
+                    logoText.innerText = "QX999";
                     isAnalyzing = false;
                 }, 1200);
             }
@@ -160,8 +185,8 @@
     }
 
     document.getElementById('qx_login_btn').onclick = function () {
-        let inputPass = document.getElementById('qx_pass').value;
-        if (inputPass === licenseKey) {
+        let pass = document.getElementById('qx_pass').value;
+        if (pass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
             loginBox.style.display = 'none';
             botContainer.style.display = 'flex';
@@ -170,6 +195,6 @@
 
     botContainer.addEventListener('click', function () {
         if (isDragging || isAnalyzing) return;
-        start3SecAnalysis();
+        startAnalysis();
     });
 })();
