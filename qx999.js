@@ -12,7 +12,6 @@
     let greenForce = 0;
     let redForce = 0;
     let analysisTimer = null;
-    let lastTradeDirection = "UP";
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -70,7 +69,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Balanced Trade Mode</option>
+            <option value="AI">AI Live Candle Scanner</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -154,25 +153,56 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
+    // Real AI Candle Detection Logic
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgElements.forEach(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return;
+            // 1. Chart Canvas Pixel Analysis
+            let chartCanvases = document.querySelectorAll("canvas");
+            chartCanvases.forEach(cvs => {
+                if (cvs.id === 'qx999-scan-canvas') return;
+                try {
+                    let cCtx = cvs.getContext('2d');
+                    if (cCtx) {
+                        let imgData = cCtx.getImageData(0, 0, cvs.width, cvs.height).data;
+                        for (let i = 0; i < imgData.length; i += 40) {
+                            let r = imgData[i];
+                            let g = imgData[i + 1];
+                            let b = imgData[i + 2];
 
-                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-                let className = (el.getAttribute('class') || '').toLowerCase();
-
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green')) {
-                    greenForce += 1;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red')) {
-                    redForce += 1;
+                            // Green candle color detection
+                            if (g > 150 && g > r * 1.3 && g > b) {
+                                greenForce += 1;
+                            }
+                            // Red candle color detection
+                            else if (r > 150 && r > g * 1.3 && r > b) {
+                                redForce += 1;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // CORS fallback for SVG DOM Elements
                 }
             });
-        }, 40);
+
+            // 2. DOM SVG & Path Analysis
+            let elements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='green'], [class*='red']");
+            elements.forEach(el => {
+                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return;
+
+                let style = window.getComputedStyle(el);
+                let fill = el.getAttribute('fill') || style.fill || el.getAttribute('stroke') || style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+
+                if (fill.includes('26a69a') || fill.includes('00e676') || className.includes('green') || className.includes('call') || className.includes('up')) {
+                    greenForce += 2;
+                } else if (fill.includes('ef5350') || fill.includes('ff5252') || className.includes('red') || className.includes('put') || className.includes('down')) {
+                    redForce += 2;
+                }
+            });
+        }, 50);
     }
 
     function drawSkullShadow() {
@@ -259,17 +289,18 @@
             scanAnimationId = null;
         }
         
-        let selectedSignal = "DOWN";
+        // AI Trade Decision Logic
+        let selectedSignal = null;
 
-        if (redForce > greenForce) {
-            selectedSignal = "DOWN";
-        } else if (greenForce > redForce) {
+        if (greenForce > redForce) {
             selectedSignal = "UP";
+        } else if (redForce > greenForce) {
+            selectedSignal = "DOWN";
         } else {
-            selectedSignal = (lastTradeDirection === "UP") ? "DOWN" : "UP";
+            // Random Market Decision if forces are equal
+            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
-        lastTradeDirection = selectedSignal;
         executeTrade(selectedSignal);
 
         logoIcon.classList.remove('glowing');
@@ -277,27 +308,25 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        if (!direction) return;
+
+        let allButtons = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = allElements.find(el => {
+            targetBtn = allButtons.find(el => {
                 if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-                let text = (el.innerText || el.textContent || "").trim();
+                let text = (el.innerText || el.textContent || "").toLowerCase().trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল");
-                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up");
-                return isUpText || isUpClass;
+                return text.includes("up") || text.includes("call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call");
             });
-        } else {
-            targetBtn = allElements.find(el => {
+        } else if (direction === "DOWN") {
+            targetBtn = allButtons.find(el => {
                 if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-                let text = (el.innerText || el.textContent || "").trim();
+                let text = (el.innerText || el.textContent || "").toLowerCase().trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট");
-                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down");
-                return isDownText || isDownClass;
+                return text.includes("down") || text.includes("put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put");
             });
         }
 
@@ -310,7 +339,7 @@
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
-            loginBox.remove();
+            loginBox.style.display = 'none';
             botContainer.style.display = 'flex';
         }
     };
