@@ -40,7 +40,6 @@
         }
         #qx999-icon.glowing {
             box-shadow: 0 0 25px #00ff66, 0 0 10px #00ff66, inset 0 0 12px #00ff66 !important;
-            /* Logo scale kept 100% normal */
             transform: scale(1) !important;
         }
         #qx999-icon img {
@@ -87,7 +86,7 @@
     `;
     document.head.appendChild(style);
 
-    // 1. QX999 Login Modal (Matching Screenshot 1000321771.jpg)
+    // 1. QX999 Login Modal
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login-modal';
     loginBox.className = 'qx999-modal';
@@ -99,7 +98,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. QX999 Settings Modal (Matching Screenshot 1000321772.jpg)
+    // 2. QX999 Settings Modal
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings-modal';
     settingsBox.className = 'qx999-modal';
@@ -282,7 +281,7 @@
         isScanning = false;
     }
 
-    // Ultra-Accurate Button Clicking Engine (Excludes Info/Help Popups)
+    // Ultra-Accurate Button Clicking Engine
     function executeTrade(direction) {
         let elements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"]'));
         let targetBtn = null;
@@ -293,7 +292,6 @@
                 let cls = (el.className || "").toString().toLowerCase();
                 let aria = (el.getAttribute('aria-label') || "").toLowerCase();
                 
-                // Exclude help/info boxes
                 if (aria.includes('help') || aria.includes('info') || cls.includes('help')) return false;
 
                 return (text === 'up' || text === 'call' || cls.includes('call-btn') || cls.includes('button-call') || (cls.includes('up') && !cls.includes('group')));
@@ -304,7 +302,6 @@
                 let cls = (el.className || "").toString().toLowerCase();
                 let aria = (el.getAttribute('aria-label') || "").toLowerCase();
 
-                // Exclude help/info boxes
                 if (aria.includes('help') || aria.includes('info') || cls.includes('help')) return false;
 
                 return (text === 'down' || text === 'put' || cls.includes('put-btn') || cls.includes('button-put') || (cls.includes('down') && !cls.includes('group')));
