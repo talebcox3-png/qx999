@@ -6,12 +6,10 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
-    let scanDurationSec = 3; 
-    let isConfigured = false; 
-
-    let greenForce = 0;
-    let redForce = 0;
-    let analysisTimer = null;
+    
+    let scanDelay = 5;
+    let afterTradeScan = 5;
+    let selectedDirection = "Random";
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -20,16 +18,24 @@
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
             border: 2px solid #00ff66;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
-            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
+            transition: transform 0.1s ease-in-out;
         }
-        #qx999-logo-icon.glowing {
-            box-shadow: 0 0 35px #00ff66, 0 0 15px #00ff66, inset 0 0 20px #00ff66 !important;
-            transform: scale(1.08);
+        #qx999-logo-icon:active {
+            transform: scale(0.92);
         }
-        ::placeholder {
-            color: #777777;
-            letter-spacing: normal;
+        .qx-input {
+            width: 100%; padding: 12px; background: #080d0a; color: #fff;
+            border: 1px solid #1c3524; border-radius: 10px; box-sizing: border-box;
+            margin-bottom: 15px; font-size: 15px; outline: none;
+        }
+        .qx-btn-dir {
+            width: 100%; padding: 12px; background: #0c1810; color: #ffffff;
+            border: 1px solid #1c3524; border-radius: 10px; margin-bottom: 10px;
+            font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .qx-btn-dir.active {
+            background: #00ff66 !important; color: #000000 !important; border-color: #00ff66 !important;
         }
     `;
     document.head.appendChild(style);
@@ -40,17 +46,16 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        width: 330px; background: #09130c; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 25px 20px; border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,255,102,0.2); z-index: 999999;
+        font-family: Arial, sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500; letter-spacing:0.5px;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0; font-weight:400;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; transition: opacity 0.2s;">Enter</button>
+        <h2 style="margin:0 0 5px 0; color:#00ff66; font-size:22px; font-weight:bold;">QX999 Login</h2>
+        <p style="font-size:13px; color:#aaa; margin:0 0 20px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" class="qx-input" placeholder="••••••••" style="letter-spacing:3px; text-align:center;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -58,30 +63,37 @@
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 320px; background: #08110a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 22px; border-radius: 20px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        box-shadow: 0 0 30px rgba(0,255,102,0.2); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Analysis Delay (Sec):</label>
-        <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
-        <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI High Accuracy Mode (78%+)</option>
-        </select>
-        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:6px;">Scan delay (seconds)</label>
+        <input type="number" id="qx_scan_delay" class="qx-input" value="5">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:4px;">After trade scan (seconds)</label>
+        <span style="font-size:11px; color:#777; display:block; margin-bottom:6px;">0 = stop only when you tap the icon</span>
+        <input type="number" id="qx_after_scan" class="qx-input" value="5">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
+        <button id="dir_up" class="qx-btn-dir">Up</button>
+        <button id="dir_down" class="qx-btn-dir">Down</button>
+        <button id="dir_random" class="qx-btn-dir active">Random</button>
+        
+        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">Save</button>
+        <p style="font-size:11px; color:#666; text-align:center; margin:10px 0 0 0;">3 taps on icon to open • Tap outside to close</p>
     `;
     document.body.appendChild(settingsBox);
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
-        position: fixed; top: 120px; right: 20px;
+        position: fixed; top: 140px; right: 20px;
         display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
-        z-index: 999999; cursor: move; user-select: none;
-        touch-action: none;
+        z-index: 999999; cursor: pointer; user-select: none; touch-action: none;
     `;
 
     let logoIcon = document.createElement('div');
@@ -89,8 +101,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
-        text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
+        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 5px;
+        text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
     `;
     logoText.innerText = "QX999";
 
@@ -99,244 +111,42 @@
     document.body.appendChild(botContainer);
 
     let isDragging = false, startX, startY, initialX, initialY;
-    
     function dragStart(e) {
         isDragging = false;
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = clientX;
-        startY = clientY;
-        initialX = botContainer.offsetLeft;
-        initialY = botContainer.offsetTop;
+        startX = clientX; startY = clientY;
+        initialX = botContainer.offsetLeft; initialY = botContainer.offsetTop;
         document.addEventListener('mousemove', dragMove);
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('mouseup', dragEnd);
         document.addEventListener('touchend', dragEnd);
     }
-
     function dragMove(e) {
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        let dx = clientX - startX;
-        let dy = clientY - startY;
+        let dx = clientX - startX; let dy = clientY - startY;
         if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
         botContainer.style.left = (initialX + dx) + 'px';
         botContainer.style.top = (initialY + dy) + 'px';
         botContainer.style.right = 'auto';
     }
-
     function dragEnd() {
         document.removeEventListener('mousemove', dragMove);
         document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('mouseup', dragEnd);
         document.removeEventListener('touchend', dragEnd);
     }
-
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    let scanCanvas = document.createElement('canvas');
-    scanCanvas.id = 'qx999-scan-canvas';
-    scanCanvas.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        pointer-events: none; z-index: 999998; display: none;
-    `;
-    document.body.appendChild(scanCanvas);
-    let ctx = scanCanvas.getContext('2d');
-
-    function resizeCanvas() {
-        scanCanvas.width = window.innerWidth;
-        scanCanvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
-
-    function startRealTimeAnalysis() {
-        greenForce = 0;
-        redForce = 0;
-
-        analysisTimer = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, circle, g");
-            svgElements.forEach(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return;
-
-                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-                let className = (el.getAttribute('class') || '').toLowerCase();
-
-                if (fill.includes('26a69a') || fill.includes('00e676') || fill.includes('0, 255') || className.includes('green') || className.includes('up')) {
-                    greenForce += 3;
-                } else if (fill.includes('ef5350') || fill.includes('ff5252') || fill.includes('255, 0') || className.includes('red') || className.includes('down')) {
-                    redForce += 3;
-                }
-            });
-        }, 40);
-    }
-
-    function drawSkullShadow() {
-        let cx = scanCanvas.width / 2;
-        let cy = scanCanvas.height / 2;
-        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
-
-        ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-        ctx.shadowColor = "rgba(0, 255, 102, 0.4)";
-        ctx.shadowBlur = 20;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
-        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
-        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
-        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + size * 0.06);
-        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
-        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
-        ctx.closePath();
-        ctx.fill();
-
-        for (let i = -2; i <= 2; i++) {
-            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
-        }
-
-        ctx.restore();
-    }
-
-    function drawSmokeScanLine() {
-        let currentTime = Date.now();
-        let elapsedSec = (currentTime - scanStartTime) / 1000;
-
-        if (elapsedSec >= scanDurationSec) {
-            finishScan();
-            return;
-        }
-
-        ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        drawSkullShadow();
-
-        let trailHeight = 140;
-        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
-        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
-
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4;
-        ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 30;
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(scanCanvas.width, scanY);
-        ctx.stroke();
-
-        scanY += 7;
-        if (scanY > scanCanvas.height) {
-            scanY = 0;
-        }
-
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
-    }
-
-    function finishScan() {
-        if (analysisTimer) clearInterval(analysisTimer);
-        scanCanvas.style.display = 'none';
-        if (scanAnimationId) {
-            cancelAnimationFrame(scanAnimationId);
-            scanAnimationId = null;
-        }
-        
-        let selectedSignal = "UP";
-
-        if (greenForce > redForce) {
-            selectedSignal = "UP";
-        } else if (redForce > greenForce) {
-            selectedSignal = "DOWN";
-        } else {
-            selectedSignal = Math.random() > 0.45 ? "UP" : "DOWN";
-        }
-
-        executeTrade(selectedSignal);
-
-        logoIcon.classList.remove('glowing');
-        isScanning = false;
-    }
-
-    // 🎯 NEW ACCURATE TRIGGER METHOD BASED ON IMAGE LAYOUT
-    function simulateClick(el) {
-        if (!el) return;
-        let opts = { bubbles: true, cancelable: true, view: window };
-        
-        el.dispatchEvent(new PointerEvent('pointerdown', opts));
-        el.dispatchEvent(new MouseEvent('mousedown', opts));
-        el.dispatchEvent(new PointerEvent('pointerup', opts));
-        el.dispatchEvent(new MouseEvent('mouseup', opts));
-        el.dispatchEvent(new MouseEvent('click', opts));
-        
-        if (typeof el.click === 'function') {
-            el.click();
-        }
-    }
-
-    function executeTrade(direction) {
-        let targetBtn = null;
-
-        // 1. Text Search Strategy (Up & Down Text Nodes)
-        let allDivsAndBtns = Array.from(document.querySelectorAll('button, div, a, span'));
-        
-        targetBtn = allDivsAndBtns.find(el => {
-            if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-
-            let text = (el.innerText || el.textContent || "").trim();
-            let hasChildText = el.children.length <= 2; // Exact button node
-
-            if (direction === "UP") {
-                return (text === "Up" || text === "UP" || text.startsWith("Up\n")) && hasChildText;
-            } else {
-                return (text === "Down" || text === "DOWN" || text.startsWith("Down\n")) && hasChildText;
-            }
-        });
-
-        // 2. Class-Based Strategy (Market-QX UI Specific)
-        if (!targetBtn) {
-            if (direction === "UP") {
-                targetBtn = document.querySelector('.button-call, .btn-call, .call-btn, [class*="call"], [class*="green"]');
-            } else {
-                targetBtn = document.querySelector('.button-put, .btn-put, .put-btn, [class*="put"], [class*="red"]');
-            }
-        }
-
-        // 3. Fallback: Exact Coordinate Screen Tap (100% Guaranteed for Screen Layout)
-        if (targetBtn) {
-            simulateClick(targetBtn);
-        } else {
-            // Screen area targeting for Up (Left side bottom) and Down (Right side bottom)
-            let screenWidth = window.innerWidth;
-            let screenHeight = window.innerHeight;
-            
-            // Green Up Area: Center-left bottom (approx 25% X, 84% Y)
-            // Red Down Area: Center-right bottom (approx 75% X, 84% Y)
-            let targetX = direction === "UP" ? screenWidth * 0.25 : screenWidth * 0.75;
-            let targetY = screenHeight * 0.84;
-
-            let elAtPoint = document.elementFromPoint(targetX, targetY);
-            if (elAtPoint) {
-                simulateClick(elAtPoint);
-            }
-        }
-    }
+    ['dir_up', 'dir_down', 'dir_random'].forEach(id => {
+        document.getElementById(id).onclick = function () {
+            document.querySelectorAll('.qx-btn-dir').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedDirection = this.innerText;
+        };
+    });
 
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
@@ -348,30 +158,105 @@
     };
 
     document.getElementById('qx_save_btn').onclick = function () {
-        let delayInput = parseInt(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput > 0) {
-            scanDurationSec = delayInput;
-        }
+        scanDelay = parseInt(document.getElementById('qx_scan_delay').value) || 5;
+        afterTradeScan = parseInt(document.getElementById('qx_after_scan').value) || 5;
         settingsBox.style.display = 'none';
-        isConfigured = true;
     };
+
+    window.addEventListener('click', function (e) {
+        if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !botContainer.contains(e.target)) {
+            settingsBox.style.display = 'none';
+        }
+    });
+
+    function fireClick(element) {
+        if (!element) return;
+        let opts = { bubbles: true, cancelable: true, view: window };
+        element.dispatchEvent(new PointerEvent('pointerdown', opts));
+        element.dispatchEvent(new MouseEvent('mousedown', opts));
+        element.dispatchEvent(new PointerEvent('pointerup', opts));
+        element.dispatchEvent(new MouseEvent('mouseup', opts));
+        element.dispatchEvent(new MouseEvent('click', opts));
+        if (typeof element.click === 'function') element.click();
+    }
+
+    function analyzeChartCandles() {
+        let greenScore = 0;
+        let redScore = 0;
+        let svgElements = document.querySelectorAll("path, rect, circle, g");
+
+        svgElements.forEach(el => {
+            if (el.closest('#qx999-circle-bot') || el.closest('#qx999-settings') || el.closest('#qx999-login')) return;
+            let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+            let cls = (el.getAttribute('class') || '').toLowerCase();
+
+            if (fill.includes('26a69a') || fill.includes('00e676') || fill.includes('0, 255') || cls.includes('green') || cls.includes('up')) {
+                greenScore += 5;
+            } else if (fill.includes('ef5350') || fill.includes('ff5252') || fill.includes('255, 0') || cls.includes('red') || cls.includes('down')) {
+                redScore += 5;
+            }
+        });
+
+        return greenScore >= redScore ? "Up" : "Down";
+    }
+
+    function executeTrade() {
+        let finalDirection = selectedDirection;
+
+        if (finalDirection === "Random") {
+            finalDirection = analyzeChartCandles();
+        }
+
+        let targetBtn = null;
+        let allElements = Array.from(document.querySelectorAll('button, div, a, span'));
+
+        targetBtn = allElements.find(el => {
+            if (el.closest('#qx999-circle-bot') || el.closest('#qx999-settings')) return false;
+            let text = (el.innerText || el.textContent || "").trim();
+            if (finalDirection === "Up") {
+                return (text === "Up" || text === "UP" || text.startsWith("Up\n")) && el.children.length <= 2;
+            } else {
+                return (text === "Down" || text === "DOWN" || text.startsWith("Down\n")) && el.children.length <= 2;
+            }
+        });
+
+        if (!targetBtn) {
+            if (finalDirection === "Up") {
+                targetBtn = document.querySelector('.button-call, .btn-call, [class*="call"], [class*="green"]');
+            } else {
+                targetBtn = document.querySelector('.button-put, .btn-put, [class*="put"], [class*="red"]');
+            }
+        }
+
+        if (targetBtn) {
+            fireClick(targetBtn);
+        } else {
+            let screenW = window.innerWidth;
+            let screenH = window.innerHeight;
+            let posX = finalDirection === "Up" ? screenW * 0.25 : screenW * 0.75;
+            let posY = screenH * 0.84;
+
+            let pointEl = document.elementFromPoint(posX, posY);
+            if (pointEl) fireClick(pointEl);
+        }
+    }
+
+    let tapCount = 0;
+    let tapTimer = null;
 
     botContainer.addEventListener('click', function () {
         if (isDragging) return;
 
-        if (!isConfigured) {
-            settingsBox.style.display = 'block';
-            return;
-        }
+        tapCount++;
+        if (tapTimer) clearTimeout(tapTimer);
 
-        if (isScanning) return;
-
-        isScanning = true;
-        logoIcon.classList.add('glowing');
-        scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
-        startRealTimeAnalysis();
-        drawSmokeScanLine();
+        tapTimer = setTimeout(() => {
+            if (tapCount >= 3) {
+                settingsBox.style.display = 'block';
+            } else if (tapCount === 1) {
+                executeTrade();
+            }
+            tapCount = 0;
+        }, 300);
     });
 })();
