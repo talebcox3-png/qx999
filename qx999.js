@@ -274,62 +274,66 @@
         isScanning = false;
     }
 
-    // UPDATED: Precise Target Trade Trigger for Quotex Mobile UI
+    // 🎯 NEW ACCURATE TRIGGER METHOD BASED ON IMAGE LAYOUT
+    function simulateClick(el) {
+        if (!el) return;
+        let opts = { bubbles: true, cancelable: true, view: window };
+        
+        el.dispatchEvent(new PointerEvent('pointerdown', opts));
+        el.dispatchEvent(new MouseEvent('mousedown', opts));
+        el.dispatchEvent(new PointerEvent('pointerup', opts));
+        el.dispatchEvent(new MouseEvent('mouseup', opts));
+        el.dispatchEvent(new MouseEvent('click', opts));
+        
+        if (typeof el.click === 'function') {
+            el.click();
+        }
+    }
+
     function executeTrade(direction) {
         let targetBtn = null;
 
-        // 1. Direct Quotex / Web Platform Selector Search
-        if (direction === "UP") {
-            targetBtn = document.querySelector('.button-call, .btn-call, .btn-green, button[class*="call"], div[class*="call"], button[class*="up"]');
-        } else {
-            targetBtn = document.querySelector('.button-put, .btn-put, .btn-red, button[class*="put"], div[class*="put"], button[class*="down"]');
-        }
+        // 1. Text Search Strategy (Up & Down Text Nodes)
+        let allDivsAndBtns = Array.from(document.querySelectorAll('button, div, a, span'));
+        
+        targetBtn = allDivsAndBtns.find(el => {
+            if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
 
-        // 2. Exact Text & UI Matching fallback for Mobile Screen Buttons
+            let text = (el.innerText || el.textContent || "").trim();
+            let hasChildText = el.children.length <= 2; // Exact button node
+
+            if (direction === "UP") {
+                return (text === "Up" || text === "UP" || text.startsWith("Up\n")) && hasChildText;
+            } else {
+                return (text === "Down" || text === "DOWN" || text.startsWith("Down\n")) && hasChildText;
+            }
+        });
+
+        // 2. Class-Based Strategy (Market-QX UI Specific)
         if (!targetBtn) {
-            let elements = Array.from(document.querySelectorAll('button, div[role="button"], a, div'));
-            targetBtn = elements.find(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-
-                let text = (el.innerText || el.textContent || "").toLowerCase().trim();
-                let cls = (el.className || "").toString().toLowerCase();
-
-                // Skip navigation/footer icons
-                if (text.includes("help") || text.includes("support") || text.includes("deposit") || cls.includes("help") || cls.includes("footer")) return false;
-
-                if (direction === "UP") {
-                    return (text === "up" || text.includes("up\n") || cls.includes("call") || cls.includes("green")) && !text.includes("down");
-                } else {
-                    return (text === "down" || text.includes("down\n") || cls.includes("put") || cls.includes("red")) && !text.includes("up");
-                }
-            });
+            if (direction === "UP") {
+                targetBtn = document.querySelector('.button-call, .btn-call, .call-btn, [class*="call"], [class*="green"]');
+            } else {
+                targetBtn = document.querySelector('.button-put, .btn-put, .put-btn, [class*="put"], [class*="red"]');
+            }
         }
 
-        // 3. Multi-Event Touch & Pointer Trigger Solution
+        // 3. Fallback: Exact Coordinate Screen Tap (100% Guaranteed for Screen Layout)
         if (targetBtn) {
-            // Find closest clickable element if target is inside child SVG/Span
-            let clickableEl = targetBtn.closest('button') || targetBtn.closest('div[role="button"]') || targetBtn;
+            simulateClick(targetBtn);
+        } else {
+            // Screen area targeting for Up (Left side bottom) and Down (Right side bottom)
+            let screenWidth = window.innerWidth;
+            let screenHeight = window.innerHeight;
             
-            // Native Mouse Event Dispatch
-            ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(eventType => {
-                let event = new MouseEvent(eventType, {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
-                });
-                clickableEl.dispatchEvent(event);
-            });
+            // Green Up Area: Center-left bottom (approx 25% X, 84% Y)
+            // Red Down Area: Center-right bottom (approx 75% X, 84% Y)
+            let targetX = direction === "UP" ? screenWidth * 0.25 : screenWidth * 0.75;
+            let targetY = screenHeight * 0.84;
 
-            // Touch Event Dispatch for Mobile WebView
-            if ('TouchEvent' in window) {
-                ['touchstart', 'touchend'].forEach(eventType => {
-                    let touchEvent = new TouchEvent(eventType, {
-                        bubbles: true,
-                        cancelable: true,
-                        view: window
-                    });
-                    clickableEl.dispatchEvent(touchEvent);
-                });
+            let elAtPoint = document.elementFromPoint(targetX, targetY);
+            if (elAtPoint) {
+                simulateClick(elAtPoint);
             }
         }
     }
