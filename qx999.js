@@ -20,6 +20,7 @@
             border: 2px solid #00ff66;
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
             transition: transform 0.1s ease-in-out;
+            cursor: pointer;
         }
         #qx999-logo-icon:active {
             transform: scale(0.92);
@@ -36,6 +37,11 @@
         }
         .qx-btn-dir.active {
             background: #00ff66 !important; color: #000000 !important; border-color: #00ff66 !important;
+        }
+        #qx-settings-trigger {
+            background: rgba(0, 255, 102, 0.2); color: #00ff66; border: 1px solid #00ff66;
+            padding: 3px 8px; font-size: 10px; font-weight: bold; border-radius: 5px;
+            margin-top: 4px; cursor: pointer; text-transform: uppercase;
         }
     `;
     document.head.appendChild(style);
@@ -84,7 +90,6 @@
         <button id="dir_random" class="qx-btn-dir active">Random</button>
         
         <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">Save</button>
-        <p style="font-size:11px; color:#666; text-align:center; margin:10px 0 0 0;">3 taps on icon to open • Tap outside to close</p>
     `;
     document.body.appendChild(settingsBox);
 
@@ -93,21 +98,18 @@
     botContainer.style.cssText = `
         position: fixed; top: 140px; right: 20px;
         display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
-        z-index: 999999; cursor: pointer; user-select: none; touch-action: none;
+        z-index: 999999; user-select: none; touch-action: none;
     `;
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
 
-    let logoText = document.createElement('span');
-    logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 5px;
-        text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
-    `;
-    logoText.innerText = "QX999";
+    let settingsBtn = document.createElement('button');
+    settingsBtn.id = 'qx-settings-trigger';
+    settingsBtn.innerText = "Settings";
 
     botContainer.appendChild(logoIcon);
-    botContainer.appendChild(logoText);
+    botContainer.appendChild(settingsBtn);
     document.body.appendChild(botContainer);
 
     let isDragging = false, startX, startY, initialX, initialY;
@@ -163,8 +165,13 @@
         settingsBox.style.display = 'none';
     };
 
+    settingsBtn.onclick = function (e) {
+        e.stopPropagation();
+        settingsBox.style.display = 'block';
+    };
+
     window.addEventListener('click', function (e) {
-        if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !botContainer.contains(e.target)) {
+        if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !settingsBtn.contains(e.target)) {
             settingsBox.style.display = 'none';
         }
     });
@@ -241,22 +248,10 @@
         }
     }
 
-    let tapCount = 0;
-    let tapTimer = null;
-
-    botContainer.addEventListener('click', function () {
+    // SINGLE TAP ON LOGO EXECUTES TRADE DIRECTLY
+    logoIcon.addEventListener('click', function (e) {
+        e.stopPropagation();
         if (isDragging) return;
-
-        tapCount++;
-        if (tapTimer) clearTimeout(tapTimer);
-
-        tapTimer = setTimeout(() => {
-            if (tapCount >= 3) {
-                settingsBox.style.display = 'block';
-            } else if (tapCount === 1) {
-                executeTrade();
-            }
-            tapCount = 0;
-        }, 300);
+        executeTrade();
     });
 })();
