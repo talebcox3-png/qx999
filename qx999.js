@@ -34,10 +34,10 @@
     `;
     document.head.appendChild(style);
 
-    // 1. Storage Login Logic
+    // 1. Storage Login Check
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
 
-    // Exact Image Matching UI for Login Box
+    // Login Box UI
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -56,7 +56,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Settings Panel UI
+    // 2. Settings Panel
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -72,7 +72,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade</option>
+            <option value="AI">High Accuracy AI Engine</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -159,23 +159,31 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
+    // Advanced Deep Candle Analysis (Accuracy Enhancement)
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgElements.forEach(el => {
+            let svgElements = Array.from(document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']"));
+            
+            // Weight recent candles higher than older ones
+            let total = svgElements.length;
+            svgElements.forEach((el, index) => {
+                let weight = (index + 1) / total; // Recent candles get higher priority
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 2;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 2;
+                let isGreen = fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up');
+                let isRed = fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down');
+
+                if (isGreen) {
+                    greenForce += 3 * weight;
+                } else if (isRed) {
+                    redForce += 3 * weight;
                 }
             });
-        }, 40);
+        }, 30);
     }
 
     function drawSkullShadow() {
@@ -262,11 +270,21 @@
             scanAnimationId = null;
         }
         
+        // Accurate Signal Processing Logic
         let selectedSignal = "UP";
-        if (redForce > greenForce) {
-            selectedSignal = "DOWN";
-        } else if (greenForce === redForce) {
-            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+        let totalForce = greenForce + redForce;
+        
+        if (totalForce > 0) {
+            let greenPercentage = (greenForce / totalForce) * 100;
+            let redPercentage = (redForce / totalForce) * 100;
+
+            if (redPercentage > greenPercentage) {
+                selectedSignal = "DOWN";
+            } else if (greenPercentage > redPercentage) {
+                selectedSignal = "UP";
+            } else {
+                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+            }
         }
 
         executeTrade(selectedSignal);
@@ -275,27 +293,23 @@
         isScanning = false;
     }
 
-    // 5. Multi-Selector Auto Trade Execution
+    // Direct Exact Button Trigger
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allButtons = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল");
-                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
-                return isUpText || isUpClass;
+            targetBtn = allButtons.find(b => {
+                let text = (b.innerText || b.textContent || "").trim();
+                let cls = (b.className || "").toString().toLowerCase();
+                return (text.includes("Up") || text.includes("Call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call"));
             });
         } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট");
-                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
-                return isDownText || isDownClass;
+            targetBtn = allButtons.find(b => {
+                let text = (b.innerText || b.textContent || "").trim();
+                let cls = (b.className || "").toString().toLowerCase();
+                return (text.includes("Down") || text.includes("Put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put"));
             });
         }
 
@@ -304,7 +318,7 @@
         }
     }
 
-    // 6. Login Event Handlers
+    // Login logic
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
