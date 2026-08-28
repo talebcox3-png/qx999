@@ -34,8 +34,10 @@
     `;
     document.head.appendChild(style);
 
+    // 1. Storage Login Logic
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
 
+    // Exact Image Matching UI for Login Box
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -54,6 +56,7 @@
     `;
     document.body.appendChild(loginBox);
 
+    // 2. Settings Panel UI
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -69,12 +72,13 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Live Candle Scanner</option>
+            <option value="AI">AI Trade</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
+    // 3. Bot Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
@@ -98,6 +102,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
+    // Draggable Logic
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -135,6 +140,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
+    // 4. Scan Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -153,56 +159,23 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Real AI Candle Detection Logic
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            // 1. Chart Canvas Pixel Analysis
-            let chartCanvases = document.querySelectorAll("canvas");
-            chartCanvases.forEach(cvs => {
-                if (cvs.id === 'qx999-scan-canvas') return;
-                try {
-                    let cCtx = cvs.getContext('2d');
-                    if (cCtx) {
-                        let imgData = cCtx.getImageData(0, 0, cvs.width, cvs.height).data;
-                        for (let i = 0; i < imgData.length; i += 40) {
-                            let r = imgData[i];
-                            let g = imgData[i + 1];
-                            let b = imgData[i + 2];
-
-                            // Green candle color detection
-                            if (g > 150 && g > r * 1.3 && g > b) {
-                                greenForce += 1;
-                            }
-                            // Red candle color detection
-                            else if (r > 150 && r > g * 1.3 && r > b) {
-                                redForce += 1;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // CORS fallback for SVG DOM Elements
-                }
-            });
-
-            // 2. DOM SVG & Path Analysis
-            let elements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='green'], [class*='red']");
-            elements.forEach(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return;
-
-                let style = window.getComputedStyle(el);
-                let fill = el.getAttribute('fill') || style.fill || el.getAttribute('stroke') || style.stroke || '';
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgElements.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                if (fill.includes('26a69a') || fill.includes('00e676') || className.includes('green') || className.includes('call') || className.includes('up')) {
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += 2;
-                } else if (fill.includes('ef5350') || fill.includes('ff5252') || className.includes('red') || className.includes('put') || className.includes('down')) {
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
                     redForce += 2;
                 }
             });
-        }, 50);
+        }, 40);
     }
 
     function drawSkullShadow() {
@@ -289,15 +262,10 @@
             scanAnimationId = null;
         }
         
-        // AI Trade Decision Logic
-        let selectedSignal = null;
-
-        if (greenForce > redForce) {
-            selectedSignal = "UP";
-        } else if (redForce > greenForce) {
+        let selectedSignal = "UP";
+        if (redForce > greenForce) {
             selectedSignal = "DOWN";
-        } else {
-            // Random Market Decision if forces are equal
+        } else if (greenForce === redForce) {
             selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
@@ -307,26 +275,27 @@
         isScanning = false;
     }
 
+    // 5. Multi-Selector Auto Trade Execution
     function executeTrade(direction) {
-        if (!direction) return;
-
-        let allButtons = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = allButtons.find(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-                let text = (el.innerText || el.textContent || "").toLowerCase().trim();
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("up") || text.includes("call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call");
+                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল");
+                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
+                return isUpText || isUpClass;
             });
-        } else if (direction === "DOWN") {
-            targetBtn = allButtons.find(el => {
-                if (el.closest('#qx999-circle-bot') || el.closest('#qx999-login') || el.closest('#qx999-settings')) return false;
-                let text = (el.innerText || el.textContent || "").toLowerCase().trim();
+        } else {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("down") || text.includes("put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put");
+                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট");
+                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
+                return isDownText || isDownClass;
             });
         }
 
@@ -335,11 +304,12 @@
         }
     }
 
+    // 6. Login Event Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
-            loginBox.style.display = 'none';
+            loginBox.remove();
             botContainer.style.display = 'flex';
         }
     };
