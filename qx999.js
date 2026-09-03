@@ -6,7 +6,6 @@
     });
 
     let licenseKey = "ALVI5S-HECK";
-    // New Logo Link Updated
     let logoUrl = "https://i.ibb.co/s9D1swFK/image.jpg"; 
     let scanDurationSec = 3; 
     let isConfigured = false; 
@@ -15,26 +14,29 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Advanced CSS Styles matching reference screenshots
+    // Advanced CSS Styles matching exact reference picture
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Transparent Floating Bot Icon */
+        /* Circular Logo Icon - Completely Transparent Background with Very Soft Shadow */
         #qx999-logo-icon {
-            width: 65px; height: 65px;
+            width: 62px; height: 62px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
             border: none !important;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+            /* Very light & subtle dark shadow behind the logo for perfect chart visibility */
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.45);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
+
         /* Glowing Effect during Analysis */
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 25px #00ff66, 0 0 50px #00ff66, 0 0 75px rgba(0, 255, 102, 0.8) !important;
+            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px rgba(0, 255, 102, 0.7) !important;
             animation: pulseGlow 0.8s infinite alternate;
         }
+
         @keyframes pulseGlow {
-            from { transform: scale(1); box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66; }
-            to { transform: scale(1.08); box-shadow: 0 0 30px #00ff66, 0 0 60px #00ff66; }
+            from { transform: scale(1); box-shadow: 0 0 18px #00ff66, 0 0 35px #00ff66; }
+            to { transform: scale(1.06); box-shadow: 0 0 28px #00ff66, 0 0 55px #00ff66; }
         }
     `;
     document.head.appendChild(style);
@@ -42,7 +44,7 @@
     // Retrieve saved password
     let realSavedPass = localStorage.getItem("qx999_saved_pass") || "";
 
-    // 1. Login Modal
+    // 1. Login Modal (QX999 Login UI)
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -84,7 +86,7 @@
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Floating Icon Container (Transparent Background)
+    // 3. Floating Icon Container (Fully Visible Background)
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
@@ -99,8 +101,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: 800; font-size: 14px; margin-top: 6px;
-        text-shadow: 0 0 8px #000, 0 0 12px #000; font-family: -apple-system, sans-serif;
+        color: #ffffff; font-weight: 800; font-size: 14px; margin-top: 5px;
+        text-shadow: 0 0 6px #000, 0 0 10px #000; font-family: -apple-system, sans-serif;
         letter-spacing: 0.5px;
     `;
     logoText.innerText = "QX999";
@@ -146,7 +148,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Full Canvas Overlay for Scanning Animation
+    // 4. Scanner Canvas Overlay
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -165,7 +167,7 @@
 
     let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
-    // Advanced Real-Time AI Analysis (Calculates BOTH Green & Red Force dynamically)
+    // AI Analysis (Evaluates both Green and Red forces)
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -228,7 +230,6 @@
             scanAnimationId = null;
         }
 
-        // Accurate Decision Logic
         let selectedSignal = "UP";
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
@@ -242,7 +243,7 @@
         isScanning = false;
     }
 
-    // Dynamic Trade Executor (Clicks Call or Put based on AI decision)
+    // Dynamic Trade Executor
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
 
