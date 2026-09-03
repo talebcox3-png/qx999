@@ -16,17 +16,19 @@
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-logo-icon {
-            width: 65px; height: 65px;
+            width: 60px; height: 60px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: none; /* Green border removed */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6); /* Dark subtle shadow */
-            transition: box-shadow 0.3s ease-in-out;
+            border: 2px solid rgba(0, 255, 102, 0.6);
+            /* Transparent around, subtle dark shadow, fully visible background */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
         }
-        /* Glows smoothly on click/scan without changing size */
+        /* Heavy Glowing Light Effect on Click / Analysis */
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 25px #00ff66, 0 0 10px #00ff66 !important;
-            transform: scale(1.0) !important; /* Size stays exact */
+            border-color: #00ff66 !important;
+            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px rgba(0, 255, 102, 0.8) !important;
+            transform: scale(1.0) !important;
         }
         ::placeholder {
             color: #777777;
@@ -42,9 +44,9 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 330px; background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
         color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        box-shadow: 0 0 25px rgba(0,255,102,0.2); z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
@@ -61,9 +63,9 @@
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 310px; background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
         color: #ffffff; padding: 22px; border-radius: 20px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        box-shadow: 0 0 25px rgba(0,255,102,0.2); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
@@ -72,20 +74,20 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade High WinRate</option>
+            <option value="AI">AI Trade High Accuracy</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Bot Container
+    // 3. Bot Container (No black background, totally clean)
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
         position: fixed; top: 120px; right: 20px;
         display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
         z-index: 999999; cursor: move; user-select: none;
-        touch-action: none;
+        touch-action: none; background: transparent;
     `;
 
     let logoIcon = document.createElement('div');
@@ -93,8 +95,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
-        text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
+        color: #ffffff; font-weight: bold; font-size: 12px; margin-top: 4px;
+        text-shadow: 0 0 6px #000, 0 0 10px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
     `;
     logoText.innerText = "QX999";
 
@@ -159,7 +161,6 @@
 
     let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
-    // Enhanced High-Accuracy Market Analysis
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -171,52 +172,15 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 5; // Multiplied for better sensitivity
+                    greenForce += 6;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 5;
+                    redForce += 6;
                 }
             });
-        }, 25);
+        }, 20);
     }
 
-    function drawSkullShadow() {
-        let cx = scanCanvas.width / 2;
-        let cy = scanCanvas.height / 2;
-        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
-
-        ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-        ctx.shadowColor = "rgba(0, 255, 102, 0.4)";
-        ctx.shadowBlur = 20;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
-        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
-        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
-        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + size * 0.06);
-        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
-        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
-        ctx.closePath();
-        ctx.fill();
-
-        for (let i = -2; i <= 2; i++) {
-            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
-        }
-
-        ctx.restore();
-    }
-
-    // Ultra-smooth Scanning Animation Engine
+    // Exact Laser Scanning Overlay Animation as seen in video
     function drawSmokeScanLine(timestamp) {
         let elapsedSec = (timestamp - scanStartTime) / 1000;
 
@@ -226,28 +190,26 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        drawSkullShadow();
 
-        // Smooth time-based interpolation for 60FPS
-        let cycleDuration = 1.5; // Seconds per full scan loop
+        let cycleDuration = 1.2; 
         let progress = (elapsedSec % cycleDuration) / cycleDuration;
         let currentScanY = progress * scanCanvas.height;
 
-        let trailHeight = 140;
+        let trailHeight = 120;
         let grad = ctx.createLinearGradient(0, currentScanY - trailHeight, 0, currentScanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.5)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, currentScanY - trailHeight), scanCanvas.width, trailHeight);
 
+        // Bright Laser Line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 20;
         ctx.moveTo(0, currentScanY);
         ctx.lineTo(scanCanvas.width, currentScanY);
         ctx.stroke();
@@ -267,7 +229,7 @@
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
         } else if (greenForce === redForce) {
-            selectedSignal = Math.random() > 0.4 ? "UP" : "DOWN"; // Optimized ratio
+            selectedSignal = Math.random() > 0.4 ? "UP" : "DOWN";
         }
 
         executeTrade(selectedSignal);
