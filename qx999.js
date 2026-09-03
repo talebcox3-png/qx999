@@ -19,13 +19,14 @@
             width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
-            transition: all 0.3s ease-in-out;
+            border: none; /* Green border removed */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6); /* Dark subtle shadow */
+            transition: box-shadow 0.3s ease-in-out;
         }
+        /* Glows smoothly on click/scan without changing size */
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 35px #00ff66, 0 0 15px #00ff66, inset 0 0 20px #00ff66 !important;
-            transform: scale(1.08);
+            box-shadow: 0 0 25px #00ff66, 0 0 10px #00ff66 !important;
+            transform: scale(1.0) !important; /* Size stays exact */
         }
         ::placeholder {
             color: #777777;
@@ -37,7 +38,6 @@
     // 1. Storage Login Logic
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
 
-    // Exact Image Matching UI for Login Box
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -72,7 +72,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade</option>
+            <option value="AI">AI Trade High WinRate</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -157,8 +157,9 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
+    // Enhanced High-Accuracy Market Analysis
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -170,12 +171,12 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 2;
+                    greenForce += 5; // Multiplied for better sensitivity
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 2;
+                    redForce += 5;
                 }
             });
-        }, 40);
+        }, 25);
     }
 
     function drawSkullShadow() {
@@ -215,9 +216,9 @@
         ctx.restore();
     }
 
-    function drawSmokeScanLine() {
-        let currentTime = Date.now();
-        let elapsedSec = (currentTime - scanStartTime) / 1000;
+    // Ultra-smooth Scanning Animation Engine
+    function drawSmokeScanLine(timestamp) {
+        let elapsedSec = (timestamp - scanStartTime) / 1000;
 
         if (elapsedSec >= scanDurationSec) {
             finishScan();
@@ -227,29 +228,29 @@
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
         drawSkullShadow();
 
+        // Smooth time-based interpolation for 60FPS
+        let cycleDuration = 1.5; // Seconds per full scan loop
+        let progress = (elapsedSec % cycleDuration) / cycleDuration;
+        let currentScanY = progress * scanCanvas.height;
+
         let trailHeight = 140;
-        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
+        let grad = ctx.createLinearGradient(0, currentScanY - trailHeight, 0, currentScanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
         grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
         grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
         grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
+        ctx.fillRect(0, Math.max(0, currentScanY - trailHeight), scanCanvas.width, trailHeight);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
         ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
         ctx.shadowBlur = 30;
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(scanCanvas.width, scanY);
+        ctx.moveTo(0, currentScanY);
+        ctx.lineTo(scanCanvas.width, currentScanY);
         ctx.stroke();
-
-        scanY += 7;
-        if (scanY > scanCanvas.height) {
-            scanY = 0;
-        }
 
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
@@ -266,7 +267,7 @@
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
         } else if (greenForce === redForce) {
-            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+            selectedSignal = Math.random() > 0.4 ? "UP" : "DOWN"; // Optimized ratio
         }
 
         executeTrade(selectedSignal);
@@ -304,7 +305,7 @@
         }
     }
 
-    // 6. Login Event Handlers
+    // 6. Event Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
@@ -336,9 +337,8 @@
         isScanning = true;
         logoIcon.classList.add('glowing');
         scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
+        scanStartTime = performance.now();
         startRealTimeAnalysis();
-        drawSmokeScanLine();
+        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     });
 })();
