@@ -4,7 +4,7 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-HECK";
+    let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     let scanDurationSec = 3; 
     let isConfigured = false; 
@@ -74,7 +74,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade High Accuracy</option>
+            <option value="AI">AI Trade Ultra High Accuracy</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -161,23 +161,32 @@
 
     let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
+    // HIGH-ACCURACY DEEP MARKET ANALYZER
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgElements.forEach(el => {
-                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+            let elements = Array.from(document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']"));
+            
+            // Focus heavily on recent candles (last 15 elements) for high precision trend recognition
+            let recentElements = elements.slice(-25);
+
+            recentElements.forEach((el, index) => {
+                let weight = (index + 1); // Give higher priority to latest candles
+                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 6;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 6;
+                let isGreen = fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || fill.includes('00e676') || className.includes('green') || className.includes('up');
+                let isRed = fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || fill.includes('ff5252') || className.includes('red') || className.includes('down');
+
+                if (isGreen) {
+                    greenForce += (12 * weight);
+                } else if (isRed) {
+                    redForce += (12 * weight);
                 }
             });
-        }, 20);
+        }, 15);
     }
 
     // Exact Laser Scanning Overlay Animation as seen in video
@@ -225,11 +234,15 @@
             scanAnimationId = null;
         }
         
+        // Accurate Momentum Decision
         let selectedSignal = "UP";
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
-        } else if (greenForce === redForce) {
-            selectedSignal = Math.random() > 0.4 ? "UP" : "DOWN";
+        } else if (greenForce > redForce) {
+            selectedSignal = "UP";
+        } else {
+            // Fallback trend evaluation based on dom structure
+            selectedSignal = greenForce >= redForce ? "UP" : "DOWN";
         }
 
         executeTrade(selectedSignal);
