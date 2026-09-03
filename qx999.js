@@ -9,9 +9,7 @@
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
-    let analysisTimer = null;
-    let upSignalStrength = 0;
-    let downSignalStrength = 0;
+    let lastCalculatedDirection = null;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -72,7 +70,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Multi-Indicator Master Algorithm</option>
+            <option value="AI">Strict Trend Analysis Engine</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -159,63 +157,32 @@
 
     let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
-    // ADVANCED MULTI-INDICATOR & CANDLESTICK PATTERN ANALYSIS ENGINE
-    function startRealTimeAnalysis() {
-        upSignalStrength = 0;
-        downSignalStrength = 0;
+    // DIRECT CHART SCANNER
+    function analyzeMarketDirection() {
+        let greenCount = 0;
+        let redCount = 0;
 
-        analysisTimer = setInterval(() => {
-            let elements = Array.from(document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg *"));
-            
-            let candles = elements.filter(el => {
-                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
-                let className = (el.getAttribute('class') || '').toLowerCase();
-                return fill.includes('00ff') || fill.includes('26a69a') || fill.includes('00e676') || fill.includes('255, 0') || fill.includes('ef5350') || fill.includes('ff5252') || className.includes('green') || className.includes('red') || className.includes('up') || className.includes('down');
-            });
+        let allSvgNodes = document.querySelectorAll("svg path, svg rect");
 
-            let recentCandles = candles.slice(-20); // Analyzing last 20 candle points
+        allSvgNodes.forEach(node => {
+            let fill = (node.getAttribute('fill') || node.style.fill || '').toLowerCase();
+            let stroke = (node.getAttribute('stroke') || node.style.stroke || '').toLowerCase();
 
-            let greenCount = 0;
-            let redCount = 0;
-
-            recentCandles.forEach((el, index) => {
-                let weight = index + 1; 
-                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
-                let className = (el.getAttribute('class') || '').toLowerCase();
-
-                let isGreen = fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || fill.includes('00e676') || className.includes('green') || className.includes('up');
-                let isRed = fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || fill.includes('ff5252') || className.includes('red') || className.includes('down');
-
-                if (isGreen) {
-                    greenCount++;
-                    upSignalStrength += (15 * weight); // Trend Weight
-                } else if (isRed) {
-                    redCount++;
-                    downSignalStrength += (15 * weight); // Trend Weight
-                }
-            });
-
-            // 1. Reversal LSI Logic (Oversold / Overbought Protection)
-            if (greenCount >= 5) {
-                // Potential Bullish Engulfing / Momentum Trend
-                upSignalStrength += 120;
-            } else if (redCount >= 5) {
-                // Potential Bearish Engulfing / Downward Pressure
-                downSignalStrength += 120;
+            if (fill.includes('26a69a') || fill.includes('00e676') || stroke.includes('26a69a') || stroke.includes('00e676')) {
+                greenCount++;
+            } else if (fill.includes('ef5350') || fill.includes('ff5252') || stroke.includes('ef5350') || stroke.includes('ff5252')) {
+                redCount++;
             }
+        });
 
-            // 2. Last Candle Action Reaction Analysis
-            let lastCandle = recentCandles[recentCandles.length - 1];
-            if (lastCandle) {
-                let fill = (lastCandle.getAttribute('fill') || lastCandle.style.fill || '').toLowerCase();
-                if (fill.includes('red') || fill.includes('ef5350') || fill.includes('ff5252')) {
-                    downSignalStrength += 80;
-                } else {
-                    upSignalStrength += 80;
-                }
-            }
-
-        }, 15);
+        if (greenCount > redCount) {
+            return "UP";
+        } else if (redCount > greenCount) {
+            return "DOWN";
+        } else {
+            // Alternating balance logic if equal
+            return lastCalculatedDirection === "UP" ? "DOWN" : "UP";
+        }
     }
 
     // Laser Scanning Overlay Animation
@@ -256,52 +223,43 @@
     }
 
     function finishScan() {
-        if (analysisTimer) clearInterval(analysisTimer);
         scanCanvas.style.display = 'none';
         if (scanAnimationId) {
             cancelAnimationFrame(scanAnimationId);
             scanAnimationId = null;
         }
 
-        // Final Master Signal Selection
-        let selectedSignal = "UP";
+        let direction = analyzeMarketDirection();
+        lastCalculatedDirection = direction;
 
-        if (downSignalStrength > upSignalStrength) {
-            selectedSignal = "DOWN";
-        } else if (upSignalStrength > downSignalStrength) {
-            selectedSignal = "UP";
-        } else {
-            selectedSignal = "DOWN"; // Market pull fallback
-        }
-
-        executeTrade(selectedSignal);
+        executeTrade(direction);
 
         logoIcon.classList.remove('glowing');
         isScanning = false;
     }
 
-    // Multi-Selector Auto Trade Execution
+    // Dynamic Multi-Language / Class Trade Execution
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"]'));
 
-        let targetBtn = null;
+        let target = null;
 
         if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text === "up" || text === "call" || text.includes("call") || text.includes("উপরে") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up");
+            target = buttons.find(btn => {
+                let txt = (btn.innerText || btn.textContent || "").toLowerCase();
+                let cls = (btn.className || "").toString().toLowerCase();
+                return txt.includes("up") || txt.includes("call") || cls.includes("green") || cls.includes("up") || cls.includes("call");
             });
         } else if (direction === "DOWN") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text === "down" || text === "put" || text.includes("put") || text.includes("নিচে") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down");
+            target = buttons.find(btn => {
+                let txt = (btn.innerText || btn.textContent || "").toLowerCase();
+                let cls = (btn.className || "").toString().toLowerCase();
+                return txt.includes("down") || txt.includes("put") || cls.includes("red") || cls.includes("down") || cls.includes("put");
             });
         }
 
-        if (targetBtn) {
-            targetBtn.click();
+        if (target) {
+            target.click();
         }
     }
 
@@ -338,7 +296,6 @@
         logoIcon.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanStartTime = performance.now();
-        startRealTimeAnalysis();
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     });
 })();
