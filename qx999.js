@@ -1,89 +1,90 @@
 (function () {
+    // 1. Clean previous instances
     ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
-    let licenseKey = "Alvi1234";
+    let licenseKey = "ALVI5S-HECK";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
-    let lastCalculatedDirection = null;
+    let greenForce = 0;
+    let redForce = 0;
+    let analysisTimer = null;
+
+    // Retrieve saved password if exists for auto-fill cover
+    let savedPassword = localStorage.getItem("qx999_saved_password") || "";
 
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-logo-icon {
-            width: 60px; height: 60px;
+            width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid rgba(0, 255, 102, 0.6);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+            border: 2px solid #00ff66;
+            box-shadow: 0 0 25px #00ff66, 0 0 40px rgba(0, 255, 102, 0.8), inset 0 0 15px #00ff66;
+            transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            border-color: #00ff66 !important;
-            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px rgba(0, 255, 102, 0.8) !important;
-            transform: scale(1.0) !important;
-        }
-        ::placeholder {
-            color: #777777;
-            letter-spacing: normal;
+            box-shadow: 0 0 50px #00ff66, 0 0 30px #00ff66, 0 0 70px rgba(0, 255, 102, 1), inset 0 0 25px #00ff66 !important;
+            transform: scale(1.1);
         }
     `;
     document.head.appendChild(style);
 
-    // 1. Storage Login Logic
-    let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
-
+    // 2. HUBUHU LOGIN BOX UI (Exact Match to Screenshot)
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.2); z-index: 999999;
+        width: 320px; background: rgba(11, 19, 14, 0.98); border: 1.5px solid #204d2e;
+        color: #ffffff; padding: 32px 22px 28px 22px; border-radius: 28px;
+        box-shadow: 0 0 40px rgba(0,0,0,0.9); z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        text-align: center; display: block; backdrop-filter: blur(12px);
     `;
+    
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500; letter-spacing:0.5px;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0; font-weight:400;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; transition: opacity 0.2s;">Enter</button>
+        <h3 style="margin:0 0 8px 0; color:#00ff66; font-size:22px; font-weight:500; letter-spacing:0.2px;">QX999 Login</h3>
+        <p style="font-size:13px; color:#b0b8b2; margin:0 0 24px 0; font-weight:400;">Enter password to continue</p>
+        <div style="background:#000000; border:1px solid #1a3320; border-radius:16px; padding:4px; margin-bottom:20px;">
+            <input type="password" id="qx_pass" value="${savedPassword}" placeholder="••••••••" style="width:100%; padding:12px 14px; background:transparent; color:#ffffff; border:none; box-sizing:border-box; font-size:18px; outline:none; letter-spacing:4px; text-align:left;">
+        </div>
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:16px; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 0 15px rgba(0,255,102,0.3); transition: opacity 0.2s;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Settings Panel UI
+    // 3. Settings Box UI
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 22px; border-radius: 20px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.2); z-index: 999999;
+        width: 300px; background: rgba(11, 19, 14, 0.98); border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 22px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.25); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Analysis Delay (Sec):</label>
-        <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
+        <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #1a3320; border-radius:10px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
-        <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">Strict Trend Analysis Engine</option>
+        <select id="qx_mode" style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #1a3320; border-radius:10px; box-sizing:border-box; margin-bottom:20px; outline:none;">
+            <option value="AI">AI Multi-Trend High Precision</option>
         </select>
-        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
+        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Bot Container
+    // 4. Floating Bot Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
         position: fixed; top: 120px; right: 20px;
-        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
-        z-index: 999999; cursor: move; user-select: none;
-        touch-action: none; background: transparent;
+        display: none; flex-direction: column; align-items: center;
+        z-index: 999999; cursor: move; user-select: none; touch-action: none;
     `;
 
     let logoIcon = document.createElement('div');
@@ -91,8 +92,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 12px; margin-top: 4px;
-        text-shadow: 0 0 6px #000, 0 0 10px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
+        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
+        text-shadow: 0 0 8px #000, 0 0 6px #00ff66; font-family: Arial, sans-serif;
     `;
     logoText.innerText = "QX999";
 
@@ -100,7 +101,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Draggable Logic
+    // Draggable Functionality
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -138,7 +139,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Scan Canvas
+    // 5. Scan Overlay Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -155,39 +156,70 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // DIRECT CHART SCANNER
-    function analyzeMarketDirection() {
-        let greenCount = 0;
-        let redCount = 0;
+    function startRealTimeAnalysis() {
+        greenForce = 0;
+        redForce = 0;
 
-        let allSvgNodes = document.querySelectorAll("svg path, svg rect");
+        analysisTimer = setInterval(() => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg *");
+            let recentCandles = Array.from(svgElements).slice(-20);
 
-        allSvgNodes.forEach(node => {
-            let fill = (node.getAttribute('fill') || node.style.fill || '').toLowerCase();
-            let stroke = (node.getAttribute('stroke') || node.style.stroke || '').toLowerCase();
+            recentCandles.forEach((el, index) => {
+                let weight = index + 1;
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
 
-            if (fill.includes('26a69a') || fill.includes('00e676') || stroke.includes('26a69a') || stroke.includes('00e676')) {
-                greenCount++;
-            } else if (fill.includes('ef5350') || fill.includes('ff5252') || stroke.includes('ef5350') || stroke.includes('ff5252')) {
-                redCount++;
-            }
-        });
-
-        if (greenCount > redCount) {
-            return "UP";
-        } else if (redCount > greenCount) {
-            return "DOWN";
-        } else {
-            // Alternating balance logic if equal
-            return lastCalculatedDirection === "UP" ? "DOWN" : "UP";
-        }
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += (3 * weight);
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += (3 * weight);
+                }
+            });
+        }, 30);
     }
 
-    // Laser Scanning Overlay Animation
-    function drawSmokeScanLine(timestamp) {
-        let elapsedSec = (timestamp - scanStartTime) / 1000;
+    function drawSkullShadow() {
+        let cx = scanCanvas.width / 2;
+        let cy = scanCanvas.height / 2;
+        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.shadowColor = "rgba(0, 255, 102, 0.5)";
+        ctx.shadowBlur = 25;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
+        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
+        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + size * 0.06);
+        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
+        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
+        ctx.closePath();
+        ctx.fill();
+
+        for (let i = -2; i <= 2; i++) {
+            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
+        }
+
+        ctx.restore();
+    }
+
+    function drawSmokeScanLine() {
+        let currentTime = Date.now();
+        let elapsedSec = (currentTime - scanStartTime) / 1000;
 
         if (elapsedSec >= scanDurationSec) {
             finishScan();
@@ -195,81 +227,98 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
+        drawSkullShadow();
 
-        let cycleDuration = 1.2; 
-        let progress = (elapsedSec % cycleDuration) / cycleDuration;
-        let currentScanY = progress * scanCanvas.height;
-
-        let trailHeight = 120;
-        let grad = ctx.createLinearGradient(0, currentScanY - trailHeight, 0, currentScanY);
+        let trailHeight = 150;
+        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.12)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.5)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, currentScanY - trailHeight), scanCanvas.width, trailHeight);
+        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
-        // Bright Laser Line
+        // Neon Glow Laser Line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 20;
-        ctx.moveTo(0, currentScanY);
-        ctx.lineTo(scanCanvas.width, currentScanY);
+        ctx.shadowBlur = 35;
+        ctx.moveTo(0, scanY);
+        ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
+
+        scanY += 8;
+        if (scanY > scanCanvas.height) {
+            scanY = 0;
+        }
 
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
 
     function finishScan() {
+        if (analysisTimer) clearInterval(analysisTimer);
         scanCanvas.style.display = 'none';
         if (scanAnimationId) {
             cancelAnimationFrame(scanAnimationId);
             scanAnimationId = null;
         }
+        
+        let selectedSignal = "UP";
+        if (redForce > greenForce) {
+            selectedSignal = "DOWN";
+        } else if (greenForce > redForce) {
+            selectedSignal = "UP";
+        } else {
+            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+        }
 
-        let direction = analyzeMarketDirection();
-        lastCalculatedDirection = direction;
-
-        executeTrade(direction);
+        executeTrade(selectedSignal);
 
         logoIcon.classList.remove('glowing');
         isScanning = false;
     }
 
-    // Dynamic Multi-Language / Class Trade Execution
+    // Dynamic Trade Execution
     function executeTrade(direction) {
-        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"]'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
 
-        let target = null;
+        let targetBtn = null;
 
         if (direction === "UP") {
-            target = buttons.find(btn => {
-                let txt = (btn.innerText || btn.textContent || "").toLowerCase();
-                let cls = (btn.className || "").toString().toLowerCase();
-                return txt.includes("up") || txt.includes("call") || cls.includes("green") || cls.includes("up") || cls.includes("call");
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল") || text.includes("উপরে");
+                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
+                return isUpText || isUpClass;
             });
-        } else if (direction === "DOWN") {
-            target = buttons.find(btn => {
-                let txt = (btn.innerText || btn.textContent || "").toLowerCase();
-                let cls = (btn.className || "").toString().toLowerCase();
-                return txt.includes("down") || txt.includes("put") || cls.includes("red") || cls.includes("down") || cls.includes("put");
+        } else {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট") || text.includes("নিচে");
+                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
+                return isDownText || isDownClass;
             });
         }
 
-        if (target) {
-            target.click();
+        if (targetBtn) {
+            targetBtn.click();
         }
     }
 
-    // Event Handlers
+    // Save Password & Auto-login Trigger
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
-            localStorage.setItem("qx999_logged_in", "true");
+            // Save valid password in local storage
+            localStorage.setItem("qx999_saved_password", inputPass);
             loginBox.remove();
             botContainer.style.display = 'flex';
+        } else {
+            alert("Wrong Password!");
         }
     };
 
@@ -295,7 +344,9 @@
         isScanning = true;
         logoIcon.classList.add('glowing');
         scanCanvas.style.display = 'block';
-        scanStartTime = performance.now();
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        scanY = 0;
+        scanStartTime = Date.now();
+        startRealTimeAnalysis();
+        drawSmokeScanLine();
     });
 })();
