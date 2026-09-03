@@ -1,12 +1,13 @@
 (function () {
     // Clean previous instances
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings', 'qx999-bg-overlay'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
     let licenseKey = "ALVI5S-HECK";
     let logoUrl = "https://i.ibb.co/s9D1swFK/image.jpg"; 
+    let bgAnimeUrl = "https://i.ibb.co/s9D1swFK/image.jpg"; // Background watermark image
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -14,29 +15,38 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Advanced CSS Styles matching exact reference picture
+    // Background Watermark Image Overlay (Very Light & Transparent Behind Chart)
+    let bgOverlay = document.createElement('div');
+    bgOverlay.id = 'qx999-bg-overlay';
+    bgOverlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: url('${bgAnimeUrl}') center/cover no-repeat;
+        opacity: 0.12; pointer-events: none; z-index: 1;
+    `;
+    document.body.appendChild(bgOverlay);
+
+    // Dynamic Stylesheet matching exact reference photos
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Circular Logo Icon - Completely Transparent Background with Very Soft Shadow */
+        /* Circular Logo Icon with Green Neon Glow */
         #qx999-logo-icon {
-            width: 62px; height: 62px;
+            width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: none !important;
-            /* Very light & subtle dark shadow behind the logo for perfect chart visibility */
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.45);
+            border: 2px solid #00ff66;
+            box-shadow: 0 0 15px #00ff66, 0 0 30px rgba(0, 255, 102, 0.8);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
-        /* Glowing Effect during Analysis */
+        /* Glowing Pulse during Scan */
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px rgba(0, 255, 102, 0.7) !important;
-            animation: pulseGlow 0.8s infinite alternate;
+            box-shadow: 0 0 25px #00ff66, 0 0 50px #00ff66, 0 0 75px #00ff66 !important;
+            animation: pulseGlow 0.6s infinite alternate;
         }
 
         @keyframes pulseGlow {
-            from { transform: scale(1); box-shadow: 0 0 18px #00ff66, 0 0 35px #00ff66; }
-            to { transform: scale(1.06); box-shadow: 0 0 28px #00ff66, 0 0 55px #00ff66; }
+            from { transform: scale(1); box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66; }
+            to { transform: scale(1.08); box-shadow: 0 0 35px #00ff66, 0 0 70px #00ff66; }
         }
     `;
     document.head.appendChild(style);
@@ -44,27 +54,27 @@
     // Retrieve saved password
     let realSavedPass = localStorage.getItem("qx999_saved_pass") || "";
 
-    // 1. Login Modal (QX999 Login UI)
+    // 1. Login Modal
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: #07120a; border: 1.5px solid #00e676;
+        width: 310px; background: rgba(7, 18, 10, 0.95); border: 1.5px solid #00e676;
         color: #ffffff; padding: 25px 20px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0, 230, 118, 0.2); z-index: 999999;
+        box-shadow: 0 0 35px rgba(0, 255, 102, 0.3); z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         text-align: center; display: block;
     `;
 
     loginBox.innerHTML = `
-        <h2 style="margin: 0 0 8px 0; color: #00ff66; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">QX999 LOGIN</h2>
+        <h2 style="margin: 0 0 8px 0; color: #00ff66; font-size: 22px; font-weight: 700;">QX999 Login</h2>
         <p style="font-size: 13px; color: #b0b0b0; margin: 0 0 20px 0;">Enter password to continue</p>
         <input type="password" id="qx_pass" value="${realSavedPass}" placeholder="••••••••" style="width: 100%; padding: 12px 15px; background: #040906; color: #00ff66; border: 1.5px solid #00e676; border-radius: 12px; box-sizing: border-box; margin-bottom: 20px; font-size: 16px; outline: none; text-align: center;">
         <button id="qx_login_btn" style="width: 100%; padding: 13px; background: #00ff66; color: #000000; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Bot Settings Box
+    // 2. Settings Box
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -86,11 +96,11 @@
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Floating Icon Container (Fully Visible Background)
+    // 3. Floating Icon Container with Green Shadow Effect
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
-        position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
+        position: fixed; top: 45%; left: 75%; transform: translate(-50%, -50%);
         display: none; flex-direction: column; align-items: center;
         z-index: 999999; cursor: move; user-select: none;
         touch-action: none; background: transparent;
@@ -101,8 +111,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: 800; font-size: 14px; margin-top: 5px;
-        text-shadow: 0 0 6px #000, 0 0 10px #000; font-family: -apple-system, sans-serif;
+        color: #ffffff; font-weight: 800; font-size: 14px; margin-top: 6px;
+        text-shadow: 0 0 8px #000, 0 0 12px #00ff66; font-family: -apple-system, sans-serif;
         letter-spacing: 0.5px;
     `;
     logoText.innerText = "QX999";
@@ -148,7 +158,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Scanner Canvas Overlay
+    // 4. Full Green Smoke & Laser Scanner Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -167,7 +177,6 @@
 
     let scanAnimationId = null, isScanning = false, scanStartTime = 0;
 
-    // AI Analysis (Evaluates both Green and Red forces)
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -187,7 +196,8 @@
         }, 15);
     }
 
-    function drawSmokeScanLine(timestamp) {
+    // Green Smoke Scan Line Effect
+    function drawGreenSmokeScan(timestamp) {
         let elapsedSec = (timestamp - scanStartTime) / 1000;
 
         if (elapsedSec >= scanDurationSec) {
@@ -197,29 +207,34 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
+        // Overall Green Tint Overlay
+        ctx.fillStyle = 'rgba(0, 255, 102, 0.08)';
+        ctx.fillRect(0, 0, scanCanvas.width, scanCanvas.height);
+
         let cycleDuration = 1.2; 
         let progress = (elapsedSec % cycleDuration) / cycleDuration;
         let currentScanY = progress * scanCanvas.height;
 
-        let trailHeight = 140;
+        let trailHeight = 160;
         let grad = ctx.createLinearGradient(0, currentScanY - trailHeight, 0, currentScanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.15)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, currentScanY - trailHeight), scanCanvas.width, trailHeight);
 
+        // Bright Laser Scan Line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.moveTo(0, currentScanY);
         ctx.lineTo(scanCanvas.width, currentScanY);
         ctx.stroke();
 
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        scanAnimationId = requestAnimationFrame(drawGreenSmokeScan);
     }
 
     function finishScan() {
@@ -243,10 +258,9 @@
         isScanning = false;
     }
 
-    // Dynamic Trade Executor
+    // Trade Execution
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
-
         let targetBtn = null;
 
         if (direction === "UP") {
@@ -268,7 +282,7 @@
         }
     }
 
-    // Login Action
+    // Events
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
@@ -304,6 +318,6 @@
         scanCanvas.style.display = 'block';
         scanStartTime = performance.now();
         startRealTimeAnalysis();
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        scanAnimationId = requestAnimationFrame(drawGreenSmokeScan);
     });
 })();
