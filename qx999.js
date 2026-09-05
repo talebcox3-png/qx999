@@ -1,192 +1,224 @@
 (function () {
-    // Remove existing instances
-    ['qx999-login-modal', 'qx999-settings-modal', 'qx999-circle-widget', 'qx999-style-sheet', 'qx999-scan-line', 'qx999-scan-text'].forEach(id => {
+    // 1. Clean previous instances
+    ['qx999-login-overlay', 'qx999-settings-overlay', 'qx999-circle-bot', 'qx999-style-sheet', 'qx999-scan-laser'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
+    let licenseKey = "ALVI5S-HECK";
+    let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
+    
+    let scanDelay = 5;
+    let afterTradeScan = 5;
+    let tradeDirection = "Random";
     let isAnalyzing = false;
-    let customLogoUrl = "https://i.ibb.co.com/KxYhht7K/1000323502-photoaidcom-cropped.png";
-    const DEFAULT_PASS = "5S-XALVI1001";
-    let selectedStrategy = "QX999 TRADE";
+    let tapCount = 0;
+    let tapTimer = null;
 
-    // Inject Stylesheet
+    let greenForce = 0;
+    let redForce = 0;
+    let analysisTimer = null;
+
+    // Inject Stylesheet (Exact UI match)
     const style = document.createElement('style');
     style.id = 'qx999-style-sheet';
     style.innerHTML = `
-        /* Full Cover Overlay for Login */
-        .qx999-cover-overlay {
+        .qx999-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #03070e;
+            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);
             display: flex; align-items: center; justify-content: center;
-            z-index: 9999999; font-family: 'Segoe UI', Roboto, sans-serif;
-        }
-
-        /* Settings Overlay */
-        .qx999-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999999; font-family: 'Segoe UI', Roboto, sans-serif;
+            z-index: 9999999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .qx999-card {
-            width: 310px; background: #070d17;
-            border: 1.5px solid #00ff66; border-radius: 14px;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
-            overflow: hidden; text-align: center; color: #fff;
+            width: 310px; background: #0a110e;
+            border: 1.5px solid #00ff66; border-radius: 20px;
+            padding: 24px 20px; text-align: center; color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 102, 0.15);
+            box-sizing: border-box;
         }
-        .qx999-header {
-            padding: 16px 15px 10px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .qx999-header h2 {
-            margin: 0; color: #00ff66; font-size: 19px; font-weight: 800;
-            letter-spacing: 1px; text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
-        }
-        .qx999-body { padding: 20px; }
-        .qx999-input-box, .qx999-select-box {
-            width: 100%; padding: 10px; box-sizing: border-box;
-            background: #0d1624; border: 1px solid #00ff66;
-            border-radius: 8px; color: #00ff66; font-size: 15px;
-            font-weight: bold; text-align: center; outline: none;
-        }
-        .qx999-btn {
-            width: 100%; margin-top: 16px; padding: 11px;
-            background: #00ff66; color: #000; font-size: 14px; font-weight: 900;
-            border: none; border-radius: 8px; cursor: pointer; letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(0, 255, 102, 0.3); transition: 0.2s;
-        }
-        .qx999-btn:active { transform: scale(0.97); }
 
-        /* Floating Widget Normal State */
-        .qx999-widget-container {
-            position: fixed; top: 260px; right: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            z-index: 999998; cursor: pointer; user-select: none;
+        .qx999-card h3 {
+            margin: 0 0 6px 0; color: #00ff66; font-size: 20px; font-weight: 700;
         }
-        .qx999-widget-btn {
-            width: 60px; height: 60px; border-radius: 50%; background: #050a12;
+        .qx999-card p {
+            margin: 0 0 18px 0; color: #a0aab0; font-size: 13px;
+        }
+
+        .qx999-input {
+            width: 100%; padding: 12px; background: #000000;
+            border: 1px solid #1c3d27; border-radius: 12px;
+            color: #ffffff; font-size: 16px; outline: none;
+            box-sizing: border-box; text-align: left; margin-bottom: 16px;
+        }
+        .qx999-input:focus { border-color: #00ff66; }
+
+        .qx999-btn-submit {
+            width: 100%; padding: 14px; background: #00ff66;
+            color: #000000; font-size: 16px; font-weight: 800;
+            border: none; border-radius: 14px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.3); transition: 0.2s;
+        }
+        .qx999-btn-submit:active { transform: scale(0.98); }
+
+        .qx999-dir-btn {
+            width: 100%; padding: 11px; background: #0d1712;
+            border: 1px solid #1c3d27; border-radius: 12px;
+            color: #ffffff; font-size: 14px; font-weight: 600;
+            margin-bottom: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .qx999-dir-btn.active {
+            border-color: #00ff66; background: rgba(0, 255, 102, 0.1); color: #00ff66;
+        }
+
+        #qx999-circle-bot {
+            position: fixed; top: 250px; right: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 999998; cursor: pointer; user-select: none; touch-action: none;
+        }
+        .qx999-bot-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: url('${logoUrl}') center/cover no-repeat;
             border: 2px solid #00ff66;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 10px rgba(0, 255, 102, 0.3);
             transition: all 0.3s ease;
         }
-        .qx999-widget-img { 
-            width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+        .qx999-bot-icon.scanning {
+            animation: qx999GlowPulse 0.8s infinite alternate ease-in-out;
+        }
+        .qx999-bot-label {
+            margin-top: 5px; color: #ffffff; font-size: 12px; font-weight: 800;
+            text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: sans-serif;
         }
 
-        /* Glowing Animation during Analysis */
-        @keyframes logoAnalysisGlow {
+        @keyframes qx999GlowPulse {
             0% {
                 box-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66;
                 transform: scale(1);
             }
-            50% {
-                box-shadow: 0 0 25px #00ff66, 0 0 40px #00ff66, 0 0 10px #ffffff;
+            100% {
+                box-shadow: 0 0 25px #00ff66, 0 0 45px #00ff66, 0 0 10px #ffffff;
                 transform: scale(1.08);
             }
-            100% {
-                box-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66;
-                transform: scale(1);
-            }
-        }
-        .qx999-widget-btn.glowing {
-            animation: logoAnalysisGlow 0.8s infinite ease-in-out;
-            border-color: #ffffff;
         }
 
-        .qx999-widget-label {
-            margin-top: 5px; background: rgba(2, 5, 10, 0.85); color: #ffffff;
-            font-size: 11px; font-weight: 900; padding: 3px 12px;
-            border-radius: 20px; border: 1.5px solid #1e293b;
-            letter-spacing: 1px; font-family: sans-serif;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-transform: uppercase;
+        #qx999-scan-laser {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 999997; display: none;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 102, 0.12) 50%, rgba(0, 255, 102, 0.4) 98%, #00ff66 100%);
+            animation: qx999LaserMove 1.5s infinite linear;
         }
-
-        /* Scanning Visuals */
-        @keyframes scanLaserLine {
-            0% { top: 20%; opacity: 0.3; }
-            50% { top: 50%; opacity: 1; }
-            100% { top: 80%; opacity: 0.3; }
-        }
-        @keyframes scanTextPulse {
-            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-            100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
-        }
-        .qx999-scan-line {
-            position: fixed; left: 0; width: 100%; height: 2.5px;
-            background: #00ff66; box-shadow: 0 0 12px #00ff66;
-            z-index: 999997; display: none; pointer-events: none;
-            animation: scanLaserLine 1.2s ease-in-out infinite alternate;
-        }
-        .qx999-scan-text {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 26px; font-weight: 900; color: #00ff66;
-            text-shadow: 0 0 12px rgba(0, 255, 102, 0.9);
-            letter-spacing: 2px; z-index: 999999; pointer-events: none;
-            font-family: 'Courier New', monospace; text-align: center;
-            display: none; animation: scanTextPulse 0.8s ease-in-out infinite; line-height: 1.2;
+        @keyframes qx999LaserMove {
+            0% { height: 0vh; opacity: 0.2; }
+            50% { opacity: 0.8; }
+            100% { height: 100vh; opacity: 0.1; }
         }
     `;
     document.head.appendChild(style);
 
-    // 1. Full Cover Login Modal
-    let loginModal = document.createElement('div');
-    loginModal.id = 'qx999-login-modal';
-    loginModal.className = 'qx999-cover-overlay';
-    loginModal.innerHTML = `
+    // Scan Laser Overlay
+    let scanLaser = document.createElement('div');
+    scanLaser.id = 'qx999-scan-laser';
+    document.body.appendChild(scanLaser);
+
+    // Login Overlay
+    let loginOverlay = document.createElement('div');
+    loginOverlay.id = 'qx999-login-overlay';
+    loginOverlay.className = 'qx999-modal-overlay';
+    loginOverlay.innerHTML = `
         <div class="qx999-card">
-            <div class="qx999-header">
-                <h2>QX999 Login</h2>
-            </div>
-            <div class="qx999-body">
-                <p style="margin-top:0; color:#aaa; font-size:12px;">Enter password to continue</p>
-                <input type="password" id="qx999-pass-input" class="qx999-input-box" value="${DEFAULT_PASS}">
-                <button id="qx999-login-submit" class="qx999-btn">Enter</button>
-            </div>
+            <h3>QX999 Login</h3>
+            <p>Enter password to continue</p>
+            <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••" value="${licenseKey}">
+            <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
         </div>
     `;
-    document.body.appendChild(loginModal);
+    document.body.appendChild(loginOverlay);
 
-    document.getElementById('qx999-login-submit').addEventListener('click', function () {
-        loginModal.remove();
-        initializeBotWidget();
-    });
+    document.getElementById('qx999-login-btn').onclick = function () {
+        let pass = document.getElementById('qx999-pass').value;
+        if (pass === licenseKey) {
+            loginOverlay.remove();
+            createFloatingBot();
+        } else {
+            alert("Wrong Password!");
+        }
+    };
 
-    // 2. Initialize Widget
-    function initializeBotWidget() {
-        let container = document.createElement('div');
-        container.id = 'qx999-circle-widget';
-        container.className = 'qx999-widget-container';
-        container.innerHTML = `
-            <div class="qx999-widget-btn" id="qx999-main-btn">
-                <img src="${customLogoUrl}" class="qx999-widget-img" alt="QX999">
+    // Settings Overlay
+    function openSettingsModal() {
+        if (document.getElementById('qx999-settings-overlay')) return;
+
+        let settingsOverlay = document.createElement('div');
+        settingsOverlay.id = 'qx999-settings-overlay';
+        settingsOverlay.className = 'qx999-modal-overlay';
+        settingsOverlay.innerHTML = `
+            <div class="qx999-card" style="text-align: left;">
+                <h3 style="text-align: center; margin-bottom: 18px;">QX999 Settings</h3>
+                
+                <label style="font-size: 12px; color: #a0aab0; display: block; margin-bottom: 6px;">Scan delay (seconds)</label>
+                <input type="number" id="qx999-scan-delay" class="qx999-input" value="${scanDelay}">
+                
+                <label style="font-size: 12px; color: #a0aab0; display: block; margin-bottom: 6px;">After trade scan (seconds)</label>
+                <p style="font-size: 11px; color: #667075; margin: -4px 0 6px 0;">0 = stop only when you tap the icon</p>
+                <input type="number" id="qx999-after-trade" class="qx999-input" value="${afterTradeScan}">
+                
+                <label style="font-size: 12px; color: #a0aab0; display: block; margin-bottom: 8px;">Trade direction</label>
+                <button class="qx999-dir-btn ${tradeDirection === 'Up' ? 'active' : ''}" data-dir="Up">Up</button>
+                <button class="qx999-dir-btn ${tradeDirection === 'Down' ? 'active' : ''}" data-dir="Down">Down</button>
+                <button class="qx999-dir-btn ${tradeDirection === 'Random' ? 'active' : ''}" data-dir="Random">Random</button>
+                
+                <button id="qx999-save-settings" class="qx999-btn-submit" style="margin-top: 10px;">Save</button>
+                
+                <p style="text-align: center; font-size: 11px; color: #778288; margin: 16px 0 0 0;">3 taps on icon to open · tap outside to close</p>
             </div>
-            <div class="qx999-widget-label">QX999</div>
         `;
-        document.body.appendChild(container);
+        document.body.appendChild(settingsOverlay);
 
-        let scanLine = document.createElement('div');
-        scanLine.className = 'qx999-scan-line';
-        document.body.appendChild(scanLine);
+        let dirBtns = settingsOverlay.querySelectorAll('.qx999-dir-btn');
+        dirBtns.forEach(btn => {
+            btn.onclick = function () {
+                dirBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                tradeDirection = this.getAttribute('data-dir');
+            };
+        });
 
-        let scanText = document.createElement('div');
-        scanText.className = 'qx999-scan-text';
-        scanText.innerHTML = "SCANNING<br>MARKET";
-        document.body.appendChild(scanText);
+        document.getElementById('qx999-save-settings').onclick = function () {
+            scanDelay = parseInt(document.getElementById('qx999-scan-delay').value) || 5;
+            afterTradeScan = parseInt(document.getElementById('qx999-after-trade').value) || 5;
+            settingsOverlay.remove();
+        };
 
-        // Dragging & Click Events
-        let startX, startY, initialX, initialY, hasMoved = false;
-        container.addEventListener('touchstart', dragStart, {passive: false});
-        container.addEventListener('mousedown', dragStart);
+        settingsOverlay.onclick = function (e) {
+            if (e.target === settingsOverlay) {
+                settingsOverlay.remove();
+            }
+        };
+    }
+
+    // Floating Bot
+    function createFloatingBot() {
+        let bot = document.createElement('div');
+        bot.id = 'qx999-circle-bot';
+        bot.innerHTML = `
+            <div class="qx999-bot-icon" id="qx999-icon-img"></div>
+            <div class="qx999-bot-label">QX999</div>
+        `;
+        document.body.appendChild(bot);
+
+        let iconImg = document.getElementById('qx999-icon-img');
+
+        let isDragging = false, startX, startY, initialX, initialY;
+        bot.addEventListener('touchstart', dragStart, {passive: false});
+        bot.addEventListener('mousedown', dragStart);
 
         function dragStart(e) {
-            hasMoved = false;
+            isDragging = false;
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches ? e.touches[0].clientY : e.clientY;
             startX = clientX; startY = clientY;
-            initialX = container.offsetLeft; initialY = container.offsetTop;
+            initialX = bot.offsetLeft; initialY = bot.offsetTop;
 
             document.addEventListener('touchmove', dragMove, {passive: false});
             document.addEventListener('mousemove', dragMove);
@@ -198,12 +230,13 @@
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches ? e.touches[0].clientY : e.clientY;
             if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
-                hasMoved = true;
+                isDragging = true;
             }
-            if (hasMoved) {
+            if (isDragging) {
                 if (e.cancelable) e.preventDefault();
-                container.style.left = (initialX + (clientX - startX)) + 'px';
-                container.style.top = (initialY + (clientY - startY)) + 'px';
+                bot.style.left = (initialX + (clientX - startX)) + 'px';
+                bot.style.top = (initialY + (clientY - startY)) + 'px';
+                bot.style.right = 'auto';
             }
         }
 
@@ -212,112 +245,110 @@
             document.removeEventListener('mousemove', dragMove);
             document.removeEventListener('touchend', dragEnd);
             document.removeEventListener('mouseup', dragEnd);
-
-            if (!hasMoved && !isAnalyzing) {
-                openSettingsModal(scanLine, scanText);
-            }
         }
+
+        bot.onclick = function () {
+            if (isDragging) return;
+
+            tapCount++;
+            clearTimeout(tapTimer);
+
+            if (tapCount === 3) {
+                tapCount = 0;
+                openSettingsModal();
+            } else {
+                tapTimer = setTimeout(() => {
+                    if (tapCount === 1 && !isAnalyzing) {
+                        triggerAnalysisProcess(iconImg);
+                    }
+                    tapCount = 0;
+                }, 350);
+            }
+        };
     }
 
-    // 3. Settings Modal
-    function openSettingsModal(scanLine, scanText) {
-        let existing = document.getElementById('qx999-settings-modal');
-        if (existing) existing.remove();
+    // Real-time chart analysis engine (From provided source code)
+    function startRealTimeAnalysis() {
+        greenForce = 0;
+        redForce = 0;
 
-        let settingsModal = document.createElement('div');
-        settingsModal.id = 'qx999-settings-modal';
-        settingsModal.className = 'qx999-overlay';
-        settingsModal.innerHTML = `
-            <div class="qx999-card">
-                <div class="qx999-header">
-                    <h2>QX999 Settings</h2>
-                </div>
-                <div class="qx999-body">
-                    <p style="margin-top:0; color:#aaa; font-size:12px; text-align:left; margin-bottom:6px;">Select Strategy:</p>
-                    <select id="qx999-strategy-select" class="qx999-select-box">
-                        <option value="QX999 TRADE" ${selectedStrategy === "QX999 TRADE" ? "selected" : ""}>QX999 TRADE</option>
-                        <option value="ONLY UP" ${selectedStrategy === "ONLY UP" ? "selected" : ""}>ONLY UP</option>
-                        <option value="ONLY DOWN" ${selectedStrategy === "ONLY DOWN" ? "selected" : ""}>ONLY DOWN</option>
-                    </select>
-                    <button id="qx999-settings-ok" class="qx999-btn">START ANALYSIS</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(settingsModal);
+        analysisTimer = setInterval(() => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg *");
+            let recentCandles = Array.from(svgElements).slice(-20);
 
-        document.getElementById('qx999-settings-ok').addEventListener('click', function () {
-            selectedStrategy = document.getElementById('qx999-strategy-select').value;
-            settingsModal.remove();
-            startAiMarketAnalysis(scanLine, scanText);
-        });
+            recentCandles.forEach((el, index) => {
+                let weight = index + 1;
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += (3 * weight);
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += (3 * weight);
+                }
+            });
+        }, 30);
     }
 
-    // 4. Analysis Execution & Glowing Toggle
-    function startAiMarketAnalysis(scanLine, scanText) {
+    function triggerAnalysisProcess(iconImg) {
         isAnalyzing = true;
-        let mainBtn = document.getElementById('qx999-main-btn');
+        iconImg.classList.add('scanning');
+        scanLaser.style.display = 'block';
 
-        if (mainBtn) mainBtn.classList.add('glowing');
-        scanLine.style.display = 'block';
-        scanText.style.display = 'block';
+        startRealTimeAnalysis();
 
         setTimeout(() => {
-            if (mainBtn) mainBtn.classList.remove('glowing');
-            scanLine.style.display = 'none';
-            scanText.style.display = 'none';
+            if (analysisTimer) clearInterval(analysisTimer);
 
-            let signal = analyzeHighProfitEngine();
-            executeTradeSignal(signal);
+            iconImg.classList.remove('scanning');
+            scanLaser.style.display = 'none';
 
-            isAnalyzing = false;
-        }, 2200);
-    }
+            let selectedSignal = "UP";
 
-    // 5. High Profit Analysis Engine
-    function analyzeHighProfitEngine() {
-        if (selectedStrategy === "ONLY UP") return 'UP';
-        if (selectedStrategy === "ONLY DOWN") return 'DOWN';
-
-        let candleNodes = Array.from(document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]'));
-        if (candleNodes.length === 0) return (Math.random() > 0.35) ? 'UP' : 'DOWN';
-
-        let greenScore = 0, redScore = 0;
-        let recentCandles = candleNodes.slice(-15);
-
-        recentCandles.forEach((node, idx) => {
-            let style = window.getComputedStyle(node);
-            let combined = (style.fill + style.stroke + style.backgroundColor).toLowerCase();
-            let weight = Math.pow(1.2, idx);
-
-            if (combined.includes('0, 255') || combined.includes('26a69a') || combined.includes('green')) {
-                greenScore += weight;
-            } else if (combined.includes('255, 74') || combined.includes('eb4d4b') || combined.includes('red')) {
-                redScore += weight;
+            if (tradeDirection === "Up") {
+                selectedSignal = "UP";
+            } else if (tradeDirection === "Down") {
+                selectedSignal = "DOWN";
+            } else {
+                if (redForce > greenForce) {
+                    selectedSignal = "DOWN";
+                } else if (greenForce > redForce) {
+                    selectedSignal = "UP";
+                } else {
+                    selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                }
             }
-        });
 
-        return greenScore >= redScore ? 'UP' : 'DOWN';
+            executeTrade(selectedSignal);
+            isAnalyzing = false;
+        }, scanDelay * 1000);
     }
 
-    // 6. Execute Trade Signal
-    function executeTradeSignal(signal) {
-        let upBtn = document.querySelector('.button--call, .btn-call, .section-deal__button._green, button.btn-up');
-        let downBtn = document.querySelector('.button--put, .btn-put, .section-deal__button._red, button.btn-down');
+    // Precise Trade Execution Trigger (From provided source code)
+    function executeTrade(direction) {
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
+        let targetBtn = null;
 
-        if (!upBtn || !downBtn) {
-            let allBtns = Array.from(document.querySelectorAll('button'));
-            upBtn = allBtns.find(b => (b.innerText || '').toLowerCase().includes('up') || (b.innerText || '').toLowerCase().includes('call'));
-            downBtn = allBtns.find(b => (b.innerText || '').toLowerCase().includes('down') || (b.innerText || '').toLowerCase().includes('put'));
+        if (direction === "UP" || direction === "Up") {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল") || text.includes("উপরে");
+                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
+                return isUpText || isUpClass;
+            });
+        } else {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট") || text.includes("নিচে");
+                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
+                return isDownText || isDownClass;
+            });
         }
 
-        let target = (signal === 'UP') ? upBtn : downBtn;
-        if (target) {
-            let opts = { bubbles: true, cancelable: true, view: window };
-            target.dispatchEvent(new PointerEvent('pointerdown', opts));
-            target.dispatchEvent(new MouseEvent('mousedown', opts));
-            target.dispatchEvent(new PointerEvent('pointerup', opts));
-            target.dispatchEvent(new MouseEvent('mouseup', opts));
-            target.dispatchEvent(new MouseEvent('click', opts));
+        if (targetBtn) {
+            targetBtn.click();
         }
     }
 })();
