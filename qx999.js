@@ -5,7 +5,7 @@
     });
 
     let licenseKey = "ALVI5S-HECK";
-    let logoUrl = "https://i.ibb.co/s9D1swFK/image.jpg"; 
+    let logoUrl = "https://i.ibb.co.com/S4W4dnkR/1000323502-photoaidcom-cropped.png"; 
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
