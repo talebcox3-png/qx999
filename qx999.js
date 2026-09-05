@@ -19,8 +19,12 @@
             width: 62px; height: 62px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: none !important;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            background-blend-mode: overlay;
+            background-color: rgba(0, 0, 0, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), inset 0 0 10px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
@@ -233,7 +237,7 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button"], div.button, span'));
         let targetBtn = null;
 
         if (direction === "UP") {
@@ -269,7 +273,7 @@
 
     document.getElementById('qx_save_btn').onclick = function () {
         let delayInput = parseInt(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput > 0) {
+        if (!isNaN(delayInput) && delayInput >0) {
             scanDurationSec = delayInput;
         }
         settingsBox.style.display = 'none';
