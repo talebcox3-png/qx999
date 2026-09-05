@@ -19,13 +19,13 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Inject Stylesheet
+    // Inject Stylesheet with enhanced premium scan animation
     const style = document.createElement('style');
     style.id = 'qx999-style-sheet';
     style.innerHTML = `
         .qx999-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
             z-index: 9999999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
@@ -34,7 +34,7 @@
             width: 310px; background: #0a110e;
             border: 1.5px solid #00ff66; border-radius: 20px;
             padding: 24px 20px; text-align: center; color: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 102, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 102, 0.2);
             box-sizing: border-box;
         }
 
@@ -86,7 +86,7 @@
         }
 
         .qx999-bot-icon.scanning {
-            animation: qx999GlowPulse 0.8s infinite alternate ease-in-out;
+            animation: qx999GlowPulse 0.6s infinite alternate ease-in-out;
         }
 
         .qx999-bot-label {
@@ -96,25 +96,27 @@
 
         @keyframes qx999GlowPulse {
             0% {
-                box-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66;
+                box-shadow: 0 0 15px #00ff66, 0 0 25px #00ff66;
                 transform: scale(1);
             }
             100% {
-                box-shadow: 0 0 25px #00ff66, 0 0 45px #00ff66, 0 0 10px #ffffff;
-                transform: scale(1.05);
+                box-shadow: 0 0 30px #00ff66, 0 0 55px #00ff66, 0 0 15px #ffffff;
+                transform: scale(1.08);
             }
         }
 
+        /* Premium Smooth Scan Laser Animation */
         #qx999-scan-laser {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: 999997; display: none;
-            background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 102, 0.12) 50%, rgba(0, 255, 102, 0.4) 98%, #00ff66 100%);
-            animation: qx999LaserMove 1.5s infinite linear;
+            background: linear-gradient(180deg, rgba(0,255,102,0) 0%, rgba(0,255,102,0.18) 50%, rgba(0,255,102,0.45) 95%, #00ff66 100%);
+            box-shadow: inset 0 0 40px rgba(0,255,102,0.3);
+            animation: qx999LaserSweep 1.2s infinite ease-in-out alternate;
         }
-        @keyframes qx999LaserMove {
-            0% { height: 0vh; opacity: 0.2; }
-            50% { opacity: 0.8; }
-            100% { height: 100vh; opacity: 0.1; }
+
+        @keyframes qx999LaserSweep {
+            0% { transform: translateY(-30%); opacity: 0.3; }
+            100% { transform: translateY(30%); opacity: 0.9; }
         }
     `;
     document.head.appendChild(style);
@@ -135,7 +137,7 @@
             <div class="qx999-card">
                 <h3>QX999 Login</h3>
                 <p>Enter password to continue</p>
-                <input type="password" id="qx999-pass" class="qx999-input" placeholder="[••••••••]">
+                <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••">
                 <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
             </div>
         `;
@@ -317,10 +319,11 @@
             } else if (tradeDirection === "Down") {
                 selectedSignal = "DOWN";
             } else {
+                // Corrected direction mapping (Inverted to fix reverse trades)
                 if (redForce > greenForce) {
-                    selectedSignal = "DOWN";
-                } else if (greenForce > redForce) {
                     selectedSignal = "UP";
+                } else if (greenForce > redForce) {
+                    selectedSignal = "DOWN";
                 } else {
                     selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
                 }
