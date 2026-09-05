@@ -76,58 +76,22 @@
             display: flex; flex-direction: column; align-items: center;
             z-index: 999998; cursor: pointer; user-select: none; touch-action: none;
         }
-        
-        .qx999-bot-wrapper {
-            position: relative;
-            width: 65px;
-            height: 65px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
 
         .qx999-bot-icon {
             width: 58px; height: 58px; border-radius: 50%;
             background: url('${logoUrl}') center/cover no-repeat;
             border: 2px solid #00ff66;
             box-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 10px rgba(0, 255, 102, 0.3);
-            z-index: 2;
+            transition: all 0.3s ease;
         }
 
-        .qx999-scan-ring {
-            position: absolute;
-            top: -4px; left: -4px; right: -4px; bottom: -4px;
-            border-radius: 50%;
-            border: 2px dashed #00ff66;
-            opacity: 0;
-            z-index: 1;
-        }
-
-        .qx999-bot-wrapper.scanning .qx999-scan-ring {
-            opacity: 1;
-            animation: qx999Rotate 2s linear infinite;
-        }
-
-        .qx999-bot-wrapper.scanning .qx999-bot-icon {
+        .qx999-bot-icon.scanning {
             animation: qx999GlowPulse 0.8s infinite alternate ease-in-out;
         }
 
-        .qx999-stars {
-            display: flex;
-            gap: 2px;
-            margin-top: 4px;
-            font-size: 10px;
-            color: #00ff66;
-        }
-
         .qx999-bot-label {
-            margin-top: 2px; color: #ffffff; font-size: 11px; font-weight: 800;
+            margin-top: 4px; color: #ffffff; font-size: 11px; font-weight: 800;
             text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: sans-serif;
-        }
-
-        @keyframes qx999Rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         @keyframes qx999GlowPulse {
@@ -160,7 +124,7 @@
     scanLaser.id = 'qx999-scan-laser';
     document.body.appendChild(scanLaser);
 
-    // Always show Login Overlay first
+    // Show Login Overlay
     showLoginOverlay();
 
     function showLoginOverlay() {
@@ -171,7 +135,7 @@
             <div class="qx999-card">
                 <h3>QX999 Login</h3>
                 <p>Enter password to continue</p>
-                <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••">
+                <input type="password" id="qx999-pass" class="qx999-input" placeholder="[••••••••]">
                 <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
             </div>
         `;
@@ -245,16 +209,12 @@
         let bot = document.createElement('div');
         bot.id = 'qx999-circle-bot';
         bot.innerHTML = `
-            <div class="qx999-bot-wrapper" id="qx999-wrapper">
-                <div class="qx999-scan-ring"></div>
-                <div class="qx999-bot-icon" id="qx999-icon-img"></div>
-            </div>
-            <div class="qx999-stars">★★★★★</div>
+            <div class="qx999-bot-icon" id="qx999-icon-img"></div>
             <div class="qx999-bot-label">QX999</div>
         `;
         document.body.appendChild(bot);
 
-        let botWrapper = document.getElementById('qx999-wrapper');
+        let iconImg = document.getElementById('qx999-icon-img');
 
         let isDragging = false, startX, startY, initialX, initialY;
         bot.addEventListener('touchstart', dragStart, {passive: false});
@@ -306,7 +266,7 @@
             } else {
                 tapTimer = setTimeout(() => {
                     if (tapCount === 1 && !isAnalyzing) {
-                        triggerAnalysisProcess(botWrapper);
+                        triggerAnalysisProcess(iconImg);
                     }
                     tapCount = 0;
                 }, 350);
@@ -337,9 +297,9 @@
         }, 30);
     }
 
-    function triggerAnalysisProcess(botWrapper) {
+    function triggerAnalysisProcess(iconImg) {
         isAnalyzing = true;
-        botWrapper.classList.add('scanning');
+        iconImg.classList.add('scanning');
         scanLaser.style.display = 'block';
 
         startRealTimeAnalysis();
@@ -347,7 +307,7 @@
         setTimeout(() => {
             if (analysisTimer) clearInterval(analysisTimer);
 
-            botWrapper.classList.remove('scanning');
+            iconImg.classList.remove('scanning');
             scanLaser.style.display = 'none';
 
             let selectedSignal = "UP";
