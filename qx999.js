@@ -1,5 +1,4 @@
 (function () {
-    // 1. Clean previous instances
     ['qx999-login-overlay', 'qx999-settings-overlay', 'qx999-circle-bot', 'qx999-style-sheet', 'qx999-scan-laser'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
@@ -19,56 +18,58 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Inject Stylesheet with enhanced premium scan animation
     const style = document.createElement('style');
     style.id = 'qx999-style-sheet';
     style.innerHTML = `
         .qx999-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
             z-index: 9999999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .qx999-card {
-            width: 310px; background: #0a110e;
-            border: 1.5px solid #00ff66; border-radius: 20px;
-            padding: 24px 20px; text-align: center; color: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 102, 0.2);
+            width: 320px; background: #0b1410;
+            border: 2px solid #00ff66; border-radius: 22px;
+            padding: 26px 22px; text-align: center; color: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 255, 102, 0.25);
             box-sizing: border-box;
         }
 
         .qx999-card h3 {
-            margin: 0 0 6px 0; color: #00ff66; font-size: 20px; font-weight: 700;
+            margin: 0 0 8px 0; color: #00ff66; font-size: 22px; font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
         }
         .qx999-card p {
-            margin: 0 0 18px 0; color: #a0aab0; font-size: 13px;
+            margin: 0 0 20px 0; color: #a0aab0; font-size: 13px;
         }
 
         .qx999-input {
-            width: 100%; padding: 12px; background: #000000;
-            border: 1px solid #1c3d27; border-radius: 12px;
+            width: 100%; padding: 14px; background: #050a08;
+            border: 1.5px solid #1c3d27; border-radius: 14px;
             color: #ffffff; font-size: 16px; outline: none;
             box-sizing: border-box; text-align: left; margin-bottom: 16px;
+            user-select: text !important; -webkit-user-select: text !important;
         }
-        .qx999-input:focus { border-color: #00ff66; }
+        .qx999-input:focus { border-color: #00ff66; box-shadow: 0 0 10px rgba(0, 255, 102, 0.3); }
 
         .qx999-btn-submit {
             width: 100%; padding: 14px; background: #00ff66;
             color: #000000; font-size: 16px; font-weight: 800;
             border: none; border-radius: 14px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.3); transition: 0.2s;
+            box-shadow: 0 5px 20px rgba(0, 255, 102, 0.4); transition: 0.2s;
         }
         .qx999-btn-submit:active { transform: scale(0.98); }
 
         .qx999-dir-btn {
-            width: 100%; padding: 11px; background: #0d1712;
-            border: 1px solid #1c3d27; border-radius: 12px;
+            width: 100%; padding: 12px; background: #0d1712;
+            border: 1.5px solid #1c3d27; border-radius: 12px;
             color: #ffffff; font-size: 14px; font-weight: 600;
             margin-bottom: 10px; cursor: pointer; transition: 0.2s;
         }
         .qx999-dir-btn.active {
-            border-color: #00ff66; background: rgba(0, 255, 102, 0.1); color: #00ff66;
+            border-color: #00ff66; background: rgba(0, 255, 102, 0.15); color: #00ff66;
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
         }
 
         #qx999-circle-bot {
@@ -76,57 +77,91 @@
             display: flex; flex-direction: column; align-items: center;
             z-index: 999998; cursor: pointer; user-select: none; touch-action: none;
         }
-
-        .qx999-bot-icon {
-            width: 58px; height: 58px; border-radius: 50%;
-            background: url('${logoUrl}') center/cover no-repeat;
-            border: 2px solid #00ff66;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 10px rgba(0, 255, 102, 0.3);
-            transition: all 0.3s ease;
+        
+        .qx999-bot-wrapper {
+            position: relative;
+            width: 68px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .qx999-bot-icon.scanning {
-            animation: qx999GlowPulse 0.6s infinite alternate ease-in-out;
+        .qx999-bot-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: url('${logoUrl}') center/cover no-repeat;
+            border: 2px solid #00ff66;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.9), 0 0 12px rgba(0, 255, 102, 0.4);
+            z-index: 2;
+        }
+
+        .qx999-scan-ring {
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%;
+            border: 2.5px dashed #00ff66;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .qx999-bot-wrapper.scanning .qx999-scan-ring {
+            opacity: 1;
+            animation: qx999Rotate 2s linear infinite;
+        }
+
+        .qx999-bot-wrapper.scanning .qx999-bot-icon {
+            animation: qx999GlowPulse 0.8s infinite alternate ease-in-out;
+        }
+
+        .qx999-stars {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+            font-size: 10px;
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.6);
         }
 
         .qx999-bot-label {
-            margin-top: 4px; color: #ffffff; font-size: 11px; font-weight: 800;
-            text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: sans-serif;
+            margin-top: 2px; color: #ffffff; font-size: 11px; font-weight: 800;
+            text-shadow: 0 0 6px #000, 0 0 5px #00ff66; font-family: sans-serif;
+        }
+
+        @keyframes qx999Rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @keyframes qx999GlowPulse {
             0% {
-                box-shadow: 0 0 15px #00ff66, 0 0 25px #00ff66;
+                box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66;
                 transform: scale(1);
             }
             100% {
                 box-shadow: 0 0 30px #00ff66, 0 0 55px #00ff66, 0 0 15px #ffffff;
-                transform: scale(1.08);
+                transform: scale(1.06);
             }
         }
 
-        /* Premium Smooth Scan Laser Animation */
         #qx999-scan-laser {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: 999997; display: none;
-            background: linear-gradient(180deg, rgba(0,255,102,0) 0%, rgba(0,255,102,0.18) 50%, rgba(0,255,102,0.45) 95%, #00ff66 100%);
-            box-shadow: inset 0 0 40px rgba(0,255,102,0.3);
-            animation: qx999LaserSweep 1.2s infinite ease-in-out alternate;
+            background: linear-gradient(to bottom, rgba(0,255,102,0.3) 0%, rgba(0, 255, 102, 0.12) 40%, rgba(0, 255, 102, 0.25) 80%, #00ff66 100%);
+            box-shadow: inset 0 0 50px rgba(0, 255, 102, 0.5);
+            animation: qx999LaserMove 1.5s infinite linear;
         }
-
-        @keyframes qx999LaserSweep {
-            0% { transform: translateY(-30%); opacity: 0.3; }
-            100% { transform: translateY(30%); opacity: 0.9; }
+        @keyframes qx999LaserMove {
+            0% { transform: translateY(-100%); opacity: 0.3; }
+            50% { opacity: 0.9; }
+            100% { transform: translateY(100%); opacity: 0.4; }
         }
     `;
     document.head.appendChild(style);
 
-    // Scan Laser Overlay
     let scanLaser = document.createElement('div');
     scanLaser.id = 'qx999-scan-laser';
     document.body.appendChild(scanLaser);
 
-    // Show Login Overlay
     showLoginOverlay();
 
     function showLoginOverlay() {
@@ -137,14 +172,18 @@
             <div class="qx999-card">
                 <h3>QX999 Login</h3>
                 <p>Enter password to continue</p>
-                <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••">
+                <input type="password" id="qx999-pass" class="qx999-input" value="${licenseKey}" placeholder="••••••••">
                 <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
             </div>
         `;
         document.body.appendChild(loginOverlay);
 
+        let passInput = document.getElementById('qx999-pass');
+        passInput.onclick = function() { this.select(); };
+        passInput.onfocus = function() { this.select(); };
+
         document.getElementById('qx999-login-btn').onclick = function () {
-            let pass = document.getElementById('qx999-pass').value;
+            let pass = passInput.value;
             if (pass === licenseKey) {
                 loginOverlay.remove();
                 createFloatingBot();
@@ -154,7 +193,6 @@
         };
     }
 
-    // Settings Overlay
     function openSettingsModal() {
         if (document.getElementById('qx999-settings-overlay')) return;
 
@@ -206,17 +244,20 @@
         };
     }
 
-    // Floating Bot
     function createFloatingBot() {
         let bot = document.createElement('div');
         bot.id = 'qx999-circle-bot';
         bot.innerHTML = `
-            <div class="qx999-bot-icon" id="qx999-icon-img"></div>
+            <div class="qx999-bot-wrapper" id="qx999-wrapper">
+                <div class="qx999-scan-ring"></div>
+                <div class="qx999-bot-icon" id="qx999-icon-img"></div>
+            </div>
+            <div class="qx999-stars">★★★★★</div>
             <div class="qx999-bot-label">QX999</div>
         `;
         document.body.appendChild(bot);
 
-        let iconImg = document.getElementById('qx999-icon-img');
+        let botWrapper = document.getElementById('qx999-wrapper');
 
         let isDragging = false, startX, startY, initialX, initialY;
         bot.addEventListener('touchstart', dragStart, {passive: false});
@@ -268,7 +309,7 @@
             } else {
                 tapTimer = setTimeout(() => {
                     if (tapCount === 1 && !isAnalyzing) {
-                        triggerAnalysisProcess(iconImg);
+                        triggerAnalysisProcess(botWrapper);
                     }
                     tapCount = 0;
                 }, 350);
@@ -276,7 +317,6 @@
         };
     }
 
-    // Real-time chart analysis engine
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -299,9 +339,9 @@
         }, 30);
     }
 
-    function triggerAnalysisProcess(iconImg) {
+    function triggerAnalysisProcess(botWrapper) {
         isAnalyzing = true;
-        iconImg.classList.add('scanning');
+        botWrapper.classList.add('scanning');
         scanLaser.style.display = 'block';
 
         startRealTimeAnalysis();
@@ -309,7 +349,7 @@
         setTimeout(() => {
             if (analysisTimer) clearInterval(analysisTimer);
 
-            iconImg.classList.remove('scanning');
+            botWrapper.classList.remove('scanning');
             scanLaser.style.display = 'none';
 
             let selectedSignal = "UP";
@@ -319,11 +359,10 @@
             } else if (tradeDirection === "Down") {
                 selectedSignal = "DOWN";
             } else {
-                // Corrected direction mapping (Inverted to fix reverse trades)
                 if (redForce > greenForce) {
-                    selectedSignal = "UP";
-                } else if (greenForce > redForce) {
                     selectedSignal = "DOWN";
+                } else if (greenForce > redForce) {
+                    selectedSignal = "UP";
                 } else {
                     selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
                 }
@@ -334,7 +373,6 @@
         }, scanDelay * 1000);
     }
 
-    // Precise Trade Execution Trigger
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
         let targetBtn = null;
