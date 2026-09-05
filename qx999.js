@@ -19,7 +19,7 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Inject Stylesheet (Exact UI match)
+    // Inject Stylesheet
     const style = document.createElement('style');
     style.id = 'qx999-style-sheet';
     style.innerHTML = `
@@ -76,19 +76,58 @@
             display: flex; flex-direction: column; align-items: center;
             z-index: 999998; cursor: pointer; user-select: none; touch-action: none;
         }
+        
+        .qx999-bot-wrapper {
+            position: relative;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .qx999-bot-icon {
-            width: 60px; height: 60px; border-radius: 50%;
+            width: 58px; height: 58px; border-radius: 50%;
             background: url('${logoUrl}') center/cover no-repeat;
             border: 2px solid #00ff66;
             box-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 10px rgba(0, 255, 102, 0.3);
-            transition: all 0.3s ease;
+            z-index: 2;
         }
-        .qx999-bot-icon.scanning {
+
+        .qx999-scan-ring {
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 2px dashed #00ff66;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .qx999-bot-wrapper.scanning .qx999-scan-ring {
+            opacity: 1;
+            animation: qx999Rotate 2s linear infinite;
+        }
+
+        .qx999-bot-wrapper.scanning .qx999-bot-icon {
             animation: qx999GlowPulse 0.8s infinite alternate ease-in-out;
         }
+
+        .qx999-stars {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+            font-size: 10px;
+            color: #00ff66;
+        }
+
         .qx999-bot-label {
-            margin-top: 5px; color: #ffffff; font-size: 12px; font-weight: 800;
+            margin-top: 2px; color: #ffffff; font-size: 11px; font-weight: 800;
             text-shadow: 0 0 6px #000, 0 0 4px #00ff66; font-family: sans-serif;
+        }
+
+        @keyframes qx999Rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @keyframes qx999GlowPulse {
@@ -98,7 +137,7 @@
             }
             100% {
                 box-shadow: 0 0 25px #00ff66, 0 0 45px #00ff66, 0 0 10px #ffffff;
-                transform: scale(1.08);
+                transform: scale(1.05);
             }
         }
 
@@ -121,29 +160,33 @@
     scanLaser.id = 'qx999-scan-laser';
     document.body.appendChild(scanLaser);
 
-    // Login Overlay
-    let loginOverlay = document.createElement('div');
-    loginOverlay.id = 'qx999-login-overlay';
-    loginOverlay.className = 'qx999-modal-overlay';
-    loginOverlay.innerHTML = `
-        <div class="qx999-card">
-            <h3>QX999 Login</h3>
-            <p>Enter password to continue</p>
-            <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••" value="${licenseKey}">
-            <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
-        </div>
-    `;
-    document.body.appendChild(loginOverlay);
+    // Always show Login Overlay first
+    showLoginOverlay();
 
-    document.getElementById('qx999-login-btn').onclick = function () {
-        let pass = document.getElementById('qx999-pass').value;
-        if (pass === licenseKey) {
-            loginOverlay.remove();
-            createFloatingBot();
-        } else {
-            alert("Wrong Password!");
-        }
-    };
+    function showLoginOverlay() {
+        let loginOverlay = document.createElement('div');
+        loginOverlay.id = 'qx999-login-overlay';
+        loginOverlay.className = 'qx999-modal-overlay';
+        loginOverlay.innerHTML = `
+            <div class="qx999-card">
+                <h3>QX999 Login</h3>
+                <p>Enter password to continue</p>
+                <input type="password" id="qx999-pass" class="qx999-input" placeholder="••••••••">
+                <button id="qx999-login-btn" class="qx999-btn-submit">Enter</button>
+            </div>
+        `;
+        document.body.appendChild(loginOverlay);
+
+        document.getElementById('qx999-login-btn').onclick = function () {
+            let pass = document.getElementById('qx999-pass').value;
+            if (pass === licenseKey) {
+                loginOverlay.remove();
+                createFloatingBot();
+            } else {
+                alert("Wrong Password!");
+            }
+        };
+    }
 
     // Settings Overlay
     function openSettingsModal() {
@@ -202,12 +245,16 @@
         let bot = document.createElement('div');
         bot.id = 'qx999-circle-bot';
         bot.innerHTML = `
-            <div class="qx999-bot-icon" id="qx999-icon-img"></div>
+            <div class="qx999-bot-wrapper" id="qx999-wrapper">
+                <div class="qx999-scan-ring"></div>
+                <div class="qx999-bot-icon" id="qx999-icon-img"></div>
+            </div>
+            <div class="qx999-stars">★★★★★</div>
             <div class="qx999-bot-label">QX999</div>
         `;
         document.body.appendChild(bot);
 
-        let iconImg = document.getElementById('qx999-icon-img');
+        let botWrapper = document.getElementById('qx999-wrapper');
 
         let isDragging = false, startX, startY, initialX, initialY;
         bot.addEventListener('touchstart', dragStart, {passive: false});
@@ -259,7 +306,7 @@
             } else {
                 tapTimer = setTimeout(() => {
                     if (tapCount === 1 && !isAnalyzing) {
-                        triggerAnalysisProcess(iconImg);
+                        triggerAnalysisProcess(botWrapper);
                     }
                     tapCount = 0;
                 }, 350);
@@ -267,7 +314,7 @@
         };
     }
 
-    // Real-time chart analysis engine (From provided source code)
+    // Real-time chart analysis engine
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -290,9 +337,9 @@
         }, 30);
     }
 
-    function triggerAnalysisProcess(iconImg) {
+    function triggerAnalysisProcess(botWrapper) {
         isAnalyzing = true;
-        iconImg.classList.add('scanning');
+        botWrapper.classList.add('scanning');
         scanLaser.style.display = 'block';
 
         startRealTimeAnalysis();
@@ -300,7 +347,7 @@
         setTimeout(() => {
             if (analysisTimer) clearInterval(analysisTimer);
 
-            iconImg.classList.remove('scanning');
+            botWrapper.classList.remove('scanning');
             scanLaser.style.display = 'none';
 
             let selectedSignal = "UP";
@@ -324,7 +371,7 @@
         }, scanDelay * 1000);
     }
 
-    // Precise Trade Execution Trigger (From provided source code)
+    // Precise Trade Execution Trigger
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
         let targetBtn = null;
