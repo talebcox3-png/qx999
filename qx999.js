@@ -211,45 +211,37 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Maximum 5-Second Ultra-High Accuracy Market Analysis Algorithm
+    // Maximum Accuracy Market Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            // High-frequency scanning for 5s micro-trends
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], circle, line");
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
             svgElements.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up') || className.includes('bull')) {
-                    greenForce += 8;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down') || className.includes('bear')) {
-                    redForce += 8;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += 4;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += 4;
                 }
             });
 
-            let priceNodes = Array.from(document.querySelectorAll('span, div, text'))
+            let priceNodes = Array.from(document.querySelectorAll('span, div'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length >= 4) {
+            if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
-                let prev1 = parseFloat(priceNodes[priceNodes.length - 2]);
-                let prev2 = parseFloat(priceNodes[priceNodes.length - 3]);
-                let prev3 = parseFloat(priceNodes[priceNodes.length - 4]);
+                let prev = parseFloat(priceNodes[priceNodes.length - 2]);
+                let older = parseFloat(priceNodes[priceNodes.length - 3]);
 
-                // Advanced multi-tier tick weight for 5-second precision
-                if (current > prev1 && prev1 >= prev2) {
-                    greenForce += 18;
-                    if (prev2 >= prev3) greenForce += 12;
-                } else if (current < prev1 && prev1 <= prev2) {
-                    redForce += 18;
-                    if (prev2 <= prev3) redForce += 12;
-                }
+                if (current > prev && prev >= older) greenForce += 8;
+                else if (current < prev && prev <= older) redForce += 8;
             }
-        }, 10);
+        }, 25);
     }
 
     // Green Scan Line Animation
@@ -313,7 +305,7 @@
 
     // Single Click Trade Execution
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button'], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
