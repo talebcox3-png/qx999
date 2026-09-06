@@ -22,37 +22,46 @@
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
         }
 
-        /* Logo styling with background shadow & smoke glow from the other code */
+        /* 80% Dark circular background with perfectly centered enlarged Skull image */
         #qx999-logo-icon {
-            width: 65px; height: 65px;
-            background-color: rgba(10, 15, 20, 0.85);
+            width: 70px; height: 70px;
+            background-color: rgba(0, 0, 0, 0.80);
             background-image: url('${logoUrl}');
-            background-position: center;
-            background-size: 82%;
+            background-position: center center;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-            transition: all 0.4s ease-in-out;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.80);
+            transition: all 0.3s ease-in-out;
             pointer-events: none;
         }
 
+        /* Active Green Glowing Smoke Animation (As in 1st Image) */
         #qx999-logo-icon.glowing {
-            animation: smokeGlowPulse 1.5s infinite alternate;
+            animation: greenSmokeGlow 1.2s infinite alternate ease-in-out !important;
         }
 
-        @keyframes smokeGlowPulse {
+        @keyframes greenSmokeGlow {
             0% {
-                box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 255, 136, 0.2);
+                box-shadow: 0 0 20px rgba(0, 255, 102, 0.7), 0 0 40px rgba(0, 255, 102, 0.5), 0 0 60px rgba(0, 255, 102, 0.3), 0 6px 20px rgba(0, 0, 0, 0.80);
+                transform: scale(1.02);
             }
             100% {
-                box-shadow: 0 0 35px rgba(0, 255, 136, 0.9), 0 0 65px rgba(0, 255, 136, 0.6), 0 0 95px rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 35px rgba(0, 255, 102, 1), 0 0 60px rgba(0, 255, 102, 0.8), 0 0 90px rgba(0, 255, 102, 0.5), 0 6px 20px rgba(0, 0, 0, 0.80);
+                transform: scale(1.06);
             }
         }
 
-        #qx999-circle-bot.glowing span {
-            color: #00ff88 !important;
-            text-shadow: 0 0 10px #00ff88;
+        /* Text stays pure white always without turning green */
+        #qx999-circle-bot span {
+            color: #ffffff !important;
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 6px;
+            text-shadow: 0 0 5px #000000, 0 0 10px #000000 !important;
+            font-family: Arial, sans-serif;
+            pointer-events: none;
         }
 
         ::placeholder {
@@ -115,11 +124,6 @@
     logoIcon.id = 'qx999-logo-icon';
 
     let logoText = document.createElement('span');
-    logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 11px; margin-top: 4px;
-        text-shadow: 0 0 4px #000; transition: color 0.3s; font-family: Arial, sans-serif;
-        pointer-events: none;
-    `;
     logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
@@ -183,6 +187,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
+    // Advanced Analysis Logic
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -199,10 +204,21 @@
                     redForce += 2;
                 }
             });
+
+            let priceNodes = Array.from(document.querySelectorAll('span, div'))
+                .map(e => e.innerText ? e.innerText.trim() : '')
+                .filter(t => /^\d+\.\d+$/.test(t));
+
+            if (priceNodes.length >= 2) {
+                let latestPrice = parseFloat(priceNodes[priceNodes.length - 1]);
+                let prevPrice = parseFloat(priceNodes[priceNodes.length - 2]);
+                if (latestPrice > prevPrice) greenForce += 3;
+                else if (latestPrice < prevPrice) redForce += 3;
+            }
         }, 40);
     }
 
-    // Scan line animation with matched speed (speed step = 8)
+    // Scan Line Animation
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -232,7 +248,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8; // Matched speed
+        scanY += 8;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -258,11 +274,10 @@
         executeTrade(selectedSignal);
 
         logoIcon.classList.remove('glowing');
-        botContainer.classList.remove('glowing');
         isScanning = false;
     }
 
-    // 5. Multi-Selector Auto Trade Execution
+    // Auto Trade Execution
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
@@ -272,26 +287,28 @@
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল");
-                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
+                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || text.includes("কল");
+                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call") || cls.includes("green");
                 return isUpText || isUpClass;
             });
         } else {
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim();
                 let cls = (el.className || "").toString().toLowerCase();
-                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট");
-                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
+                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট");
+                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put") || cls.includes("red");
                 return isDownText || isDownClass;
             });
         }
 
         if (targetBtn) {
             targetBtn.click();
+            let clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+            targetBtn.dispatchEvent(clickEvent);
         }
     }
 
-    // 6. Login Event Handlers
+    // Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
@@ -322,7 +339,6 @@
 
         isScanning = true;
         logoIcon.classList.add('glowing');
-        botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
