@@ -13,9 +13,6 @@
     let redForce = 0;
     let analysisTimer = null;
 
-    // Demo/Selling protection: Track initial trades to ensure 100% win rate for the first 6 trades
-    let tradeCount = parseInt(localStorage.getItem('qx999_trade_count') || '0');
-
     const style = document.createElement('style');
     style.innerHTML = `
         /* Main Container */
@@ -23,9 +20,30 @@
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            padding: 8px;
+            padding: 12px;
             border-radius: 50%;
-            transition: filter 0.3s ease-in-out;
+            position: relative;
+        }
+
+        /* Ambient wide green glow matching the reference images during analysis (No animation) */
+        #qx999-circle-bot::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            width: 50px; height: 50px;
+            background: radial-gradient(circle, rgba(0, 255, 102, 0.95) 0%, rgba(0, 255, 102, 0.45) 55%, transparent 80%);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        #qx999-circle-bot.glowing::before {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(2.6);
+            filter: blur(12px);
         }
 
         /* Skull perfectly centered, 65% dark background visibility, NO green ring */
@@ -40,20 +58,13 @@
             border: none;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45);
             pointer-events: none;
+            position: relative;
+            z-index: 2;
         }
 
-        /* Highly Vibrant, Bright and Wide Glowing Effect matching 1st & 2nd images */
+        /* Stable wide drop-shadow glow matching pictures */
         #qx999-circle-bot.glowing {
-            animation: fullContainerGlow 1s infinite alternate ease-in-out !important;
-        }
-
-        @keyframes fullContainerGlow {
-            0% {
-                filter: drop-shadow(0 0 20px rgba(0, 255, 102, 0.9)) drop-shadow(0 0 45px rgba(0, 255, 102, 0.6));
-            }
-            100% {
-                filter: drop-shadow(0 0 35px rgba(0, 255, 102, 1)) drop-shadow(0 0 80px rgba(0, 255, 102, 0.95));
-            }
+            filter: drop-shadow(0 0 35px rgba(0, 255, 102, 1)) drop-shadow(0 0 75px rgba(0, 255, 102, 0.9));
         }
 
         /* Text Styling */
@@ -61,10 +72,11 @@
             color: #ffffff !important;
             font-weight: bold;
             font-size: 13px;
-            margin-top: 4px;
+            margin-top: 6px;
             text-shadow: 0 0 4px #000000;
             font-family: Arial, sans-serif;
             pointer-events: none;
+            z-index: 2;
         }
 
         ::placeholder {
@@ -112,7 +124,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Pro Zero-Loss Mode</option>
+            <option value="AI">AI Pro Smart Market Mode</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -214,7 +226,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Maximum Accuracy Market Analysis Algorithm
+    // Real-Time Candle Movement & Color Analysis Algorithm (UP & DOWN Both)
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -241,8 +253,11 @@
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
                 let older = parseFloat(priceNodes[priceNodes.length - 3]);
 
-                if (current > prev && prev >= older) greenForce += 10;
-                else if (current < prev && prev <= older) redForce += 10;
+                if (current > prev && prev >= older) {
+                    greenForce += 10;
+                } else if (current < prev && prev <= older) {
+                    redForce += 10;
+                }
             }
         }, 25);
     }
@@ -293,35 +308,14 @@
             scanAnimationId = null;
         }
         
-        tradeCount++;
-        localStorage.setItem('qx999_trade_count', tradeCount);
-
+        // Smart Dynamic Signal Selection based on Candle & Price Analysis
         let selectedSignal = "UP";
-
-        // Demo Protection Mode for first 6 trades: Ensure it always picks the strong/winning trend
-        if (tradeCount <= 6) {
-            let priceNodes = Array.from(document.querySelectorAll('span, div'))
-                .map(e => e.innerText ? e.innerText.trim() : '')
-                .filter(t => /^\d+\.\d+$/.test(t));
-
-            if (priceNodes.length >= 2) {
-                let current = parseFloat(priceNodes[priceNodes.length - 1]);
-                let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                if (current >= prev) {
-                    selectedSignal = "UP";
-                } else {
-                    selectedSignal = "DOWN";
-                }
-            } else {
-                selectedSignal = "UP"; // Safe default for demo
-            }
+        if (redForce > greenForce) {
+            selectedSignal = "DOWN";
+        } else if (greenForce > redForce) {
+            selectedSignal = "UP";
         } else {
-            // Normal Analysis Mode after demo trades
-            if (redForce > greenForce) {
-                selectedSignal = "DOWN";
-            } else if (greenForce >= redForce) {
-                selectedSignal = "UP";
-            }
+            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
         executeTrade(selectedSignal);
@@ -330,7 +324,7 @@
         isScanning = false;
     }
 
-    // Single Click Trade Execution
+    // Trade Execution for UP or DOWN based on analysis
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
