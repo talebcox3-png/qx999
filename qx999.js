@@ -1,233 +1,257 @@
-(function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
-        let el = document.getElementById(id);
-        if (el) el.remove();
-    });
+(() => {
+  "use strict";
 
-    let licenseKey = "ALVI5S-HECK";
-    let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png";
-    let scanDurationSec = 3; 
-    let isScanning = false;
+  const CONFIG = {
+    name: "QX999",
+    licenseKey: "ALVI5S-HECK",
+    storageKey: "QX999_LICENSE",
+    logo: "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png",
+    scanDuration: 3000
+  };
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-        #qx999-circle-bot {
-            position: fixed; top: 120px; right: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            z-index: 999999; cursor: move; user-select: none; touch-action: none;
-        }
-        #qx999-logo-icon {
-            width: 65px; height: 65px;
-            position: relative;
-            border-radius: 50%;
-            background-color: #000;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-            transition: all 0.3s ease-in-out;
-        }
-        /* লোগোর ভেতরের অংশে হালকা কালো শ্যাডো বা ওভারলে */
-        #qx999-logo-icon::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.85) 100%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        #qx999-logo-img {
-            width: 100%; height: 100%;
-            background: url('${logoUrl}') center/cover no-repeat;
-            border-radius: 50%;
-        }
-        #qx999-logo-icon.glowing {
-            box-shadow: 0 0 30px rgba(0, 255, 102, 0.8), 0 4px 20px rgba(0, 0, 0, 0.9) !important;
-            transform: scale(1.08);
-        }
-        ::placeholder {
-            color: #777777;
-            letter-spacing: normal;
-        }
-    `;
-    document.head.appendChild(style);
+  document.getElementById("qx999-root")?.remove();
 
-    let savedPass = localStorage.getItem("qx999_saved_pass") || licenseKey;
+  const root = document.createElement("div");
+  root.id = "qx999-root";
 
-    let loginBox = document.createElement('div');
-    loginBox.id = 'qx999-login';
-    loginBox.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        text-align: center; display: block;
-    `;
-    loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500; letter-spacing:0.5px;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0; font-weight:400;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${savedPass}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;-webkit-text-security:disc;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
-    `;
-    document.body.appendChild(loginBox);
+  Object.assign(root.style, {
+    position: "fixed",
+    inset: "0",
+    zIndex: "2147483647",
+    pointerEvents: "none",
+    fontFamily: "Arial, Helvetica, sans-serif"
+  });
 
-    let botContainer = document.createElement('div');
-    botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = 'none';
+  document.documentElement.appendChild(root);
 
-    let logoIcon = document.createElement('div');
-    logoIcon.id = 'qx999-logo-icon';
+  const style = document.createElement("style");
+  style.textContent = `
+    #qx999-root *, #qx999-root *::before, #qx999-root *::after { box-sizing: border-box; }
+
+    .qx999-login-overlay {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.58); backdrop-filter: blur(3px); pointer-events: auto;
+    }
+    .qx999-login {
+      width: min(620px, calc(100vw - 70px)); min-height: 480px; padding: 44px 44px 48px;
+      border: 2px solid #00ff66; border-radius: 30px;
+      background: radial-gradient(circle at 50% 0%, rgba(0,255,102,.08), transparent 45%), #0c150e;
+      box-shadow: 0 0 15px rgba(0,255,102,.35), 0 0 45px rgba(0,255,102,.08);
+    }
+    .qx999-title { text-align: center; color: #00ff66; font-size: 38px; font-weight: 500; letter-spacing: 2px; margin: 0 0 18px; }
+    .qx999-subtitle { text-align: center; color: #a7c4ae; font-size: 25px; margin-bottom: 52px; }
+    .qx999-input-wrap { width: 100%; height: 90px; padding: 3px; border-radius: 20px; background: #00ff66; box-shadow: 0 0 10px rgba(0,255,102,.45); }
+    .qx999-input { width: 100%; height: 100%; border: 0; outline: 0; border-radius: 17px; background: #09100b; color: #eaffef; padding: 0 25px; font-size: 22px; letter-spacing: 1px; }
+    .qx999-enter { width: 100%; height: 90px; margin-top: 28px; border: 0; border-radius: 18px; background: #00f55e; color: #031008; font-size: 29px; font-weight: 700; cursor: pointer; transition: .18s ease; }
+    .qx999-enter:hover { background: #22ff76; box-shadow: 0 0 25px rgba(0,255,102,.45); }
+    .qx999-error { height: 24px; margin-top: 13px; text-align: center; color: #ff5050; font-size: 15px; }
+
+    .qx999-bot {
+      position: fixed; width: 65px; height: 92px; left: 25px; top: 50%;
+      transform: translateY(-50%); pointer-events: auto; user-select: none; touch-action: none; cursor: grab;
+    }
+    .qx999-bot.dragging { cursor: grabbing; }
+    .qx999-logo {
+      position: relative; width: 65px; height: 65px; overflow: hidden; border-radius: 50%;
+      background: #000; border: 2px solid rgba(0,255,102,.65);
+      box-shadow: 0 0 8px rgba(0,255,102,.28), 0 0 20px rgba(0,255,102,.12);
+    }
+    .qx999-logo img { width: 100%; height: 100%; display: block; object-fit: cover; }
     
-    let logoImg = document.createElement('div');
-    logoImg.id = 'qx999-logo-img';
-    logoIcon.appendChild(logoImg);
-
-    let logoText = document.createElement('span');
-    logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
-        text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
-        background: #0b0e14; padding: 1px 6px; border-radius: 4px; border: 1px solid #00ff66;
-    `;
-    logoText.innerText = "QX999";
-
-    botContainer.appendChild(logoIcon);
-    botContainer.appendChild(logoText);
-    document.body.appendChild(botContainer);
-
-    let isDragging = false, startX, startY, initialX, initialY;
-    
-    botContainer.addEventListener('pointerdown', (e) => {
-        isDragging = false;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialX = botContainer.offsetLeft;
-        initialY = botContainer.offsetTop;
-        botContainer.setPointerCapture(e.pointerId);
-    });
-
-    botContainer.addEventListener('pointermove', (e) => {
-        let dx = e.clientX - startX;
-        let dy = e.clientY - startY;
-        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) isDragging = true;
-        botContainer.style.left = (initialX + dx) + 'px';
-        botContainer.style.top = (initialY + dy) + 'px';
-        botContainer.style.right = 'auto';
-    });
-
-    let scanCanvas = document.createElement('canvas');
-    scanCanvas.id = 'qx999-scan-canvas';
-    scanCanvas.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        pointer-events: none; z-index: 999998; display: none;
-    `;
-    document.body.appendChild(scanCanvas);
-    let ctx = scanCanvas.getContext('2d');
-
-    function resizeCanvas() {
-        scanCanvas.width = window.innerWidth;
-        scanCanvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    let scanAnimationId = null, scanY = 0, scanStartTime = 0;
-
-    function drawScanLine() {
-        let elapsedSec = (Date.now() - scanStartTime) / 1000;
-
-        if (elapsedSec >= scanDurationSec) {
-            finishScan();
-            return;
-        }
-
-        ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-
-        let grad = ctx.createLinearGradient(0, scanY - 120, 0, scanY);
-        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.15)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
-
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - 120), scanCanvas.width, 120);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4;
-        ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 25;
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(scanCanvas.width, scanY);
-        ctx.stroke();
-
-        scanY += 12;
-        if (scanY > scanCanvas.height) scanY = 0;
-
-        scanAnimationId = requestAnimationFrame(drawScanLine);
+    .qx999-logo::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: 50%;
+      background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.57) 70%, rgba(0,0,0,0.85) 100%);
     }
 
-    function finishScan() {
-        scanCanvas.style.display = 'none';
-        if (scanAnimationId) cancelAnimationFrame(scanAnimationId);
-        
-        logoIcon.classList.remove('glowing');
-        isScanning = false;
+    .qx999-glow {
+      position: absolute; inset: -8px; border-radius: 50%; border: 3px solid transparent; pointer-events: none; opacity: 0;
+    }
+    .qx999-bot.scanning .qx999-glow {
+      opacity: 1; animation: qx999Pulse .8s infinite alternate, qx999Spin 1.4s linear infinite; border-color: #00ff66;
+    }
+    @keyframes qx999Pulse {
+      from { box-shadow: 0 0 5px #00ff66, 0 0 12px #00ff66; }
+      to { box-shadow: 0 0 15px #00ff66, 0 0 40px #00ff66; }
+    }
+    @keyframes qx999Spin { to { transform: rotate(360deg); } }
 
-        let direction = Math.random() > 0.5 ? "UP" : "DOWN";
-        executeAutoTrade(direction);
+    .qx999-badge {
+      position: absolute; left: 50%; top: 69px; transform: translateX(-50%);
+      min-width: 68px; height: 23px; padding: 0 8px; display: flex; justify-content: center; align-items: center;
+      border: 1px solid #00ff66; border-radius: 8px; background: #07130b; color: #00ff66;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 0 8px rgba(0,255,102,.18);
     }
 
-    function executeAutoTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a'));
-        let targetBtn = null;
+    .qx999-scan { position: fixed; inset: 0; display: none; overflow: hidden; background: linear-gradient(rgba(0,20,8,.12), rgba(0,20,8,.12)); pointer-events: none; }
+    .qx999-scan.active { display: block; }
+    .qx999-grid {
+      position: absolute; inset: 0; opacity: .15;
+      background-image: linear-gradient(rgba(0,255,102,.25) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,102,.25) 1px, transparent 1px);
+      background-size: 45px 45px;
+    }
+    .qx999-laser {
+      position: absolute; left: 0; top: -8px; width: 100%; height: 5px; background: #00ff66;
+      box-shadow: 0 0 5px #00ff66, 0 0 15px #00ff66, 0 0 35px #00ff66, 0 0 70px rgba(0,255,102,.8);
+      animation: qx999Laser 3s linear forwards;
+    }
+    .qx999-laser::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 85px;
+      background: linear-gradient(to bottom, rgba(0,255,102,.28), transparent); transform: translateY(100%);
+    }
+    @keyframes qx999Laser { from { top: -8px; } to { top: calc(100% + 8px); } }
 
-        if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                return text.includes("Up") || text.includes("Call") || text.includes("Higher");
-            });
-        } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                return text.includes("Down") || text.includes("Put") || text.includes("Lower");
-            });
-        }
+    .qx999-result {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.8);
+      min-width: 250px; padding: 25px 35px; border: 2px solid #00ff66; border-radius: 20px;
+      background: rgba(5,20,10,.95); text-align: center; opacity: 0; pointer-events: none; transition: .25s ease;
+      box-shadow: 0 0 20px rgba(0,255,102,.3);
+    }
+    .qx999-result.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .qx999-result-label { color: #9ab5a0; font-size: 14px; margin-bottom: 7px; }
+    .qx999-result-signal { font-size: 38px; font-weight: 800; letter-spacing: 2px; color: #00ff66; }
+    .qx999-result-note { margin-top: 8px; color: #b7c9bb; font-size: 12px; }
+  `;
+  root.appendChild(style);
 
-        if (targetBtn) {
-            targetBtn.click();
-        }
+  const el = (tag, className, parent = root) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    parent.appendChild(node);
+    return node;
+  };
+
+  const loginOverlay = el("div", "qx999-login-overlay");
+  const login = el("div", "qx999-login", loginOverlay);
+  const title = el("div", "qx999-title", login);
+  title.textContent = "QX999 Login";
+  const subtitle = el("div", "qx999-subtitle", login);
+  subtitle.textContent = "Enter password to continue";
+  const inputWrap = el("div", "qx999-input-wrap", login);
+  const input = el("input", "qx999-input", inputWrap);
+  input.type = "password";
+  input.value = localStorage.getItem(CONFIG.storageKey) || CONFIG.licenseKey;
+  const error = el("div", "qx999-error", login);
+  const enter = el("button", "qx999-enter", login);
+  enter.type = "button";
+  enter.textContent = "Enter";
+
+  const bot = el("div", "qx999-bot");
+  const logo = el("div", "qx999-logo", bot);
+  const img = document.createElement("img");
+  img.src = CONFIG.logo;
+  logo.appendChild(img);
+  const glow = el("div", "qx999-glow", bot);
+  const badge = el("div", "qx999-badge", bot);
+  badge.textContent = CONFIG.name;
+  bot.style.display = "none";
+
+  const scan = el("div", "qx999-scan");
+  el("div", "qx999-grid", scan);
+  const laser = el("div", "qx999-laser", scan);
+
+  const result = el("div", "qx999-result");
+  const resultLabel = el("div", "qx999-result-label", result);
+  resultLabel.textContent = "QX999 TRADE SIGNAL";
+  const resultSignal = el("div", "qx999-result-signal", result);
+  const resultNote = el("div", "qx999-result-note", result);
+
+  function unlock() {
+    if (input.value.trim() !== CONFIG.licenseKey) {
+      error.textContent = "Invalid password/license key.";
+      input.focus();
+      return;
+    }
+    localStorage.setItem(CONFIG.storageKey, input.value.trim());
+    loginOverlay.remove();
+    bot.style.display = "block";
+  }
+
+  enter.addEventListener("click", unlock);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
+
+  let dragging = false, moved = false, startX = 0, startY = 0, originalLeft = 0, originalTop = 0;
+
+  bot.addEventListener("pointerdown", e => {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragging = true; moved = false;
+    bot.classList.add("dragging");
+    const rect = bot.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    originalLeft = rect.left; originalTop = rect.top;
+    bot.setPointerCapture?.(e.pointerId);
+  });
+
+  bot.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+    const maxX = window.innerWidth - bot.offsetWidth;
+    const maxY = window.innerHeight - bot.offsetHeight;
+    bot.style.left = `${Math.max(0, Math.min(maxX, originalLeft + dx))}px`;
+    bot.style.top = `${Math.max(0, Math.min(maxY, originalTop + dy))}px`;
+    bot.style.transform = "none";
+  });
+
+  const pointerUp = e => {
+    if (!dragging) return;
+    dragging = false;
+    bot.classList.remove("dragging");
+    bot.releasePointerCapture?.(e.pointerId);
+    if (!moved) startScan();
+  };
+
+  bot.addEventListener("pointerup", pointerUp);
+  bot.addEventListener("pointercancel", pointerUp);
+
+  let scanning = false;
+  function startScan() {
+    if (scanning) return;
+    scanning = true;
+    result.classList.remove("show");
+    bot.classList.add("scanning");
+    scan.classList.add("active");
+    laser.style.animation = "none";
+    void laser.offsetWidth;
+    laser.style.animation = "qx999Laser 3s linear forwards";
+    setTimeout(() => { finishScan(); }, CONFIG.scanDuration);
+  }
+
+  function executeTrade(signal) {
+    const allElements = Array.from(document.querySelectorAll('button, div[role="button"], a'));
+    let targetBtn = null;
+
+    if (signal === "UP") {
+      targetBtn = allElements.find(el => {
+        let text = (el.innerText || el.textContent || "").trim();
+        return text.includes("Up") || text.includes("Call") || text.includes("Higher");
+      });
+    } else {
+      targetBtn = allElements.find(el => {
+        let text = (el.innerText || el.textContent || "").trim();
+        return text.includes("Down") || text.includes("Put") || text.includes("Lower");
+      });
     }
 
-    function handleLogin() {
-        let inputPass = document.getElementById('qx_pass').value;
-        if (inputPass === licenseKey) {
-            localStorage.setItem("qx999_saved_pass", inputPass);
-            loginBox.style.display = 'none';
-            botContainer.style.display = 'flex';
-        } else {
-            alert("Incorrect Password!");
-        }
+    if (targetBtn) {
+      targetBtn.click();
+      return "Trade Executed Automatically!";
+    } else {
+      return "Trade button not found on page.";
     }
+  }
 
-    document.getElementById('qx_login_btn').onclick = handleLogin;
-    document.getElementById('qx_pass').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            handleLogin();
-        }
-    });
+  function finishScan() {
+    scan.classList.remove("active");
+    bot.classList.remove("scanning");
+    scanning = false;
 
-    if (savedPass === licenseKey) {
-        loginBox.style.display = 'block';
-        botContainer.style.display = 'none';
-    }
+    const signal = Math.random() >= 0.5 ? "UP" : "DOWN";
+    resultSignal.textContent = signal;
 
-    botContainer.onclick = function () {
-        if (isDragging) return;
-        if (isScanning) return;
+    const statusMsg = executeTrade(signal);
+    resultNote.textContent = statusMsg;
 
-        isScanning = true;
-        logoIcon.classList.add('glowing');
-        scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
-        drawScanLine();
-    };
+    result.classList.add("show");
+    setTimeout(() => { result.classList.remove("show"); }, 4000);
+  }
 })();
