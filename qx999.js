@@ -34,19 +34,19 @@
             transition: all 0.4s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            animation: smokeGlowPulse 1.5s infinite alternate;
+            animation: softGreenSmoke 1.6s infinite alternate ease-in-out;
         }
-        @keyframes smokeGlowPulse {
+        @keyframes softGreenSmoke {
             0% {
-                box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 255, 136, 0.2);
+                box-shadow: 0 0 15px rgba(0, 200, 83, 0.4), 0 0 30px rgba(0, 200, 83, 0.25), 0 0 45px rgba(0, 200, 83, 0.1);
             }
             100% {
-                box-shadow: 0 0 35px rgba(0, 255, 136, 0.9), 0 0 65px rgba(0, 255, 136, 0.6), 0 0 95px rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 30px rgba(0, 200, 83, 0.8), 0 0 50px rgba(0, 200, 83, 0.5), 0 0 70px rgba(0, 200, 83, 0.25);
             }
         }
         #qx999-circle-bot.glowing span {
-            color: #00ff88 !important;
-            text-shadow: 0 0 10px #00ff88;
+            color: #2e7d32 !important;
+            text-shadow: 0 0 8px rgba(0, 200, 83, 0.8);
         }
     `;
     document.head.appendChild(style);
@@ -55,18 +55,18 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #0c1017; border: 2px solid #00ff88;
-        color: #ffffff; padding: 25px 20px; border-radius: 16px;
-        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); z-index: 999999;
+        width: 310px; background: #0d1117; border: 1.5px solid #2e7d32;
+        color: #ffffff; padding: 22px 18px; border-radius: 12px;
+        box-shadow: 0 0 25px rgba(0, 200, 83, 0.25); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 5px 0; color:#00ff88; font-size:22px; font-weight:700;">QX999 Login</h3>
-        <p style="font-size:12px; color:#9ca3af; margin:0 0 20px 0;">Enter password to continue</p>
-        <div style="position:relative; width:100%; margin-bottom:20px;">
-            <input type="password" id="qx_pass" value="${savedPass}" style="width:100%; padding:12px; background:#161d2a; color:#ffffff; border:1px solid #00ff88; border-radius:8px; box-sizing:border-box; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
+        <h3 style="margin:0 0 5px 0; color:#4caf50; font-size:20px; font-weight:700;">QX999 Login</h3>
+        <p style="font-size:12px; color:#8b949e; margin:0 0 18px 0;">Enter password to continue</p>
+        <div style="position:relative; width:100%; margin-bottom:18px;">
+            <input type="password" id="qx_pass" value="${savedPass}" style="width:100%; padding:10px; background:#161b22; color:#ffffff; border:1px solid #2e7d32; border-radius:6px; box-sizing:border-box; font-size:16px; outline:none; text-align:center; letter-spacing:3px;">
         </div>
-        <button id="qx_login_btn" style="width:100%; padding:12px; background:#00ff88; color:#0b0e14; border:none; border-radius:8px; font-weight:800; font-size:16px; cursor:pointer;">Enter</button>
+        <button id="qx_login_btn" style="width:100%; padding:10px; background:#2e7d32; color:#ffffff; border:none; border-radius:6px; font-weight:700; font-size:15px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -74,26 +74,26 @@
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #0c1017; border: 2px solid #00ff88;
-        color: #ffffff; padding: 20px; border-radius: 16px;
-        box-shadow: 0 0 30px rgba(0,255,136,0.3); z-index: 999999;
+        width: 310px; background: #0d1117; border: 1.5px solid #2e7d32;
+        color: #ffffff; padding: 20px; border-radius: 12px;
+        box-shadow: 0 0 25px rgba(0, 200, 83, 0.25); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff88; font-size:18px; text-align:center;">QX999 Settings</h3>
-        <label style="font-size:12px; color:#9ca3af;">Scan delay (seconds)</label>
-        <input type="number" id="cfg_scan_delay" value="${scanDelay}" style="width:100%; padding:10px; background:#161d2a; color:#fff; border:1px solid #00ff88; border-radius:8px; margin:5px 0 15px 0; box-sizing:border-box;">
+        <h3 style="margin:0 0 15px 0; color:#4caf50; font-size:18px; text-align:center;">QX999 Settings</h3>
+        <label style="font-size:12px; color:#8b949e;">Scan delay (seconds)</label>
+        <input type="number" id="cfg_scan_delay" value="${scanDelay}" style="width:100%; padding:9px; background:#161b22; color:#fff; border:1px solid #2e7d32; border-radius:6px; margin:4px 0 12px 0; box-sizing:border-box;">
         
-        <label style="font-size:12px; color:#9ca3af;">After trade scan (seconds)</label>
-        <input type="number" id="cfg_after_trade" value="${afterTradeScan}" style="width:100%; padding:10px; background:#161d2a; color:#fff; border:1px solid #00ff88; border-radius:8px; margin:5px 0 15px 0; box-sizing:border-box;">
+        <label style="font-size:12px; color:#8b949e;">After trade scan (seconds)</label>
+        <input type="number" id="cfg_after_trade" value="${afterTradeScan}" style="width:100%; padding:9px; background:#161b22; color:#fff; border:1px solid #2e7d32; border-radius:6px; margin:4px 0 12px 0; box-sizing:border-box;">
         
-        <label style="font-size:12px; color:#9ca3af;">Trade direction</label>
-        <div style="display:flex; gap:8px; margin:8px 0 20px 0;">
-            <button class="dir-btn" data-dir="Up" style="flex:1; padding:8px; background:#161d2a; color:#fff; border:1px solid #374151; border-radius:6px; cursor:pointer;">Up</button>
-            <button class="dir-btn" data-dir="Down" style="flex:1; padding:8px; background:#161d2a; color:#fff; border:1px solid #374151; border-radius:6px; cursor:pointer;">Down</button>
-            <button class="dir-btn" data-dir="Random" style="flex:1; padding:8px; background:#00ff88; color:#000; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Random</button>
+        <label style="font-size:12px; color:#8b949e;">Trade direction</label>
+        <div style="display:flex; gap:8px; margin:8px 0 18px 0;">
+            <button class="dir-btn" data-dir="Up" style="flex:1; padding:8px; background:#161b22; color:#fff; border:1px solid #30363d; border-radius:6px; cursor:pointer;">Up</button>
+            <button class="dir-btn" data-dir="Down" style="flex:1; padding:8px; background:#161b22; color:#fff; border:1px solid #30363d; border-radius:6px; cursor:pointer;">Down</button>
+            <button class="dir-btn" data-dir="Random" style="flex:1; padding:8px; background:#2e7d32; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Random</button>
         </div>
-        <button id="cfg_save_btn" style="width:100%; padding:12px; background:#00ff88; color:#0b0e14; border:none; border-radius:8px; font-weight:800; font-size:15px; cursor:pointer;">Save</button>
+        <button id="cfg_save_btn" style="width:100%; padding:10px; background:#2e7d32; color:#ffffff; border:none; border-radius:6px; font-weight:700; font-size:15px; cursor:pointer;">Save</button>
     `;
     document.body.appendChild(settingsBox);
 
@@ -116,12 +116,12 @@
     dirButtons.forEach(btn => {
         btn.onclick = () => {
             dirButtons.forEach(b => {
-                b.style.background = '#161d2a';
+                b.style.background = '#161b22';
                 b.style.color = '#fff';
-                b.style.border = '1px solid #374151';
+                b.style.border = '1px solid #30363d';
             });
-            btn.style.background = '#00ff88';
-            btn.style.color = '#000';
+            btn.style.background = '#2e7d32';
+            btn.style.color = '#fff';
             btn.style.border = 'none';
             tradeDirection = btn.getAttribute('data-dir');
         };
@@ -164,15 +164,10 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, scanStartTime = 0, hasTrigged = false;
+    let scanAnimationId = null, scanY = 0, scanStartTime = 0, tradeTimer = null;
 
     function drawScanLine() {
         let elapsedSec = (Date.now() - scanStartTime) / 1000;
-
-        if (!hasTrigged && elapsedSec >= (scanDelay - afterTradeScan)) {
-            hasTrigged = true;
-            executeTradeTrigger();
-        }
 
         if (elapsedSec >= scanDelay) {
             finishScan();
@@ -181,24 +176,24 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let grad = ctx.createLinearGradient(0, scanY - 160, 0, scanY);
-        grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 136, 0.15)');
-        grad.addColorStop(1, 'rgba(0, 255, 136, 0.45)');
+        let grad = ctx.createLinearGradient(0, scanY - 120, 0, scanY);
+        grad.addColorStop(0, 'rgba(0, 150, 60, 0)');
+        grad.addColorStop(0.5, 'rgba(0, 150, 60, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 180, 70, 0.35)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - 160), scanCanvas.width, 160);
+        ctx.fillRect(0, Math.max(0, scanY - 120), scanCanvas.width, 120);
 
         ctx.beginPath();
-        ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 4;
-        ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 20;
+        ctx.strokeStyle = 'rgba(0, 200, 83, 0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = 'rgba(0, 200, 83, 0.5)';
+        ctx.shadowBlur = 10;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
+        scanY += 6;
         if (scanY > scanCanvas.height) scanY = 0;
 
         scanAnimationId = requestAnimationFrame(drawScanLine);
@@ -206,12 +201,18 @@
 
     function startAnalysis() {
         isScanning = true;
-        hasTrigged = false;
         logoIcon.classList.add('glowing');
         botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
+
+        let triggerDelayMs = Math.max(0, (scanDelay - afterTradeScan) * 1000);
+        if (tradeTimer) clearTimeout(tradeTimer);
+        tradeTimer = setTimeout(() => {
+            executeTradeTrigger();
+        }, triggerDelayMs);
+
         drawScanLine();
     }
 
@@ -241,23 +242,23 @@
         }
 
         let isUp = (finalDir.toLowerCase() === "up");
-        let allButtons = Array.from(document.querySelectorAll('button, div[role="button"], a, .btn, .button-call, .button-put'));
+        let allElements = Array.from(document.querySelectorAll('button, div, a, span'));
 
-        let targetBtn = allButtons.find(el => {
-            let txt = (el.innerText || el.textContent || '').toLowerCase();
-            let cls = (el.className || '').toLowerCase();
+        let targetBtn = allElements.find(el => {
+            let txt = (el.innerText || el.textContent || '').trim().toLowerCase();
+            let cls = (el.className || '').toString().toLowerCase();
 
             if (isUp) {
-                return txt.includes('up') || txt.includes('call') || txt.includes('higher') || txt.includes('buy') || cls.includes('call') || cls.includes('up') || cls.includes('green');
+                return (txt === 'up' || txt.includes('call') || cls.includes('up') || cls.includes('call') || cls.includes('btn-green'));
             } else {
-                return txt.includes('down') || txt.includes('put') || txt.includes('lower') || txt.includes('sell') || cls.includes('put') || cls.includes('down') || cls.includes('red');
+                return (txt === 'down' || txt.includes('put') || cls.includes('down') || cls.includes('put') || cls.includes('btn-red'));
             }
         });
 
         if (targetBtn) {
             targetBtn.click();
-            let event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-            targetBtn.dispatchEvent(event);
+            let clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+            targetBtn.dispatchEvent(clickEvent);
         }
     }
 
