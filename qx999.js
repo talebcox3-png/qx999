@@ -25,31 +25,31 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Skull perfectly centered with balanced background and smooth shadow */
+        /* Skull perfectly centered, 65% dark background visibility, NO green ring */
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(20, 30, 40, 0.65);
+            background-color: rgba(10, 15, 22, 0.65);
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: 86%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 1.5px solid rgba(0, 255, 102, 0.35);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45);
             pointer-events: none;
         }
 
-        /* Vibrant and Matching Glow Effect During Analysis */
+        /* Wide and Soft Glowing Effect matching 1st & 2nd images */
         #qx999-circle-bot.glowing {
             animation: fullContainerGlow 1.2s infinite alternate ease-in-out !important;
         }
 
         @keyframes fullContainerGlow {
             0% {
-                filter: drop-shadow(0 0 14px rgba(0, 255, 102, 0.75)) drop-shadow(0 0 25px rgba(0, 255, 102, 0.45));
+                filter: drop-shadow(0 0 15px rgba(0, 255, 102, 0.7)) drop-shadow(0 0 35px rgba(0, 255, 102, 0.4));
             }
             100% {
-                filter: drop-shadow(0 0 28px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.85));
+                filter: drop-shadow(0 0 25px rgba(0, 255, 102, 1)) drop-shadow(0 0 60px rgba(0, 255, 102, 0.8));
             }
         }
 
