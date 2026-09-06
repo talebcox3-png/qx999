@@ -18,19 +18,20 @@
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
         }
         #qx999-logo-icon {
-            width: 75px; height: 75px;
-            background-color: rgba(0, 0, 0, 0.55);
+            width: 65px; height: 65px;
+            background-color: rgba(0, 0, 0, 0.65);
             background-image: url('${logoUrl}');
             background-position: center;
-            background-size: cover;
+            background-size: 82%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
             transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
         }
         ::placeholder {
             color: #777777;
@@ -69,8 +70,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #00ff88; font-weight: bold; font-size: 11px; margin-top: 6px;
-        background: #0b0e14; padding: 1px 6px; border-radius: 4px; border: 1px solid #00ff88;
+        color: #ffffff; font-weight: bold; font-size: 11px; margin-top: 4px;
+        background: transparent; border: none; text-shadow: 0 0 4px #000;
     `;
     logoText.innerText = "QX999";
 
