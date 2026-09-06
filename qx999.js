@@ -217,21 +217,19 @@
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            // High-frequency DOM scanning for active candles & vector paths (every 10ms for extreme precision)
+            // High-frequency scanning for 5s micro-trends
             let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], circle, line");
             svgElements.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
-                let transform = el.getAttribute('transform') || '';
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up') || className.includes('bull')) {
-                    greenForce += 6;
+                    greenForce += 8;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down') || className.includes('bear')) {
-                    redForce += 6;
+                    redForce += 8;
                 }
             });
 
-            // Advanced 5-second tick momentum & price action evaluation
             let priceNodes = Array.from(document.querySelectorAll('span, div, text'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
@@ -242,13 +240,13 @@
                 let prev2 = parseFloat(priceNodes[priceNodes.length - 3]);
                 let prev3 = parseFloat(priceNodes[priceNodes.length - 4]);
 
-                // Micro-momentum weighting for 5s binary options execution
+                // Advanced multi-tier tick weight for 5-second precision
                 if (current > prev1 && prev1 >= prev2) {
-                    greenForce += 15;
-                    if (prev2 >= prev3) greenForce += 10; // Strong continuous upward momentum
+                    greenForce += 18;
+                    if (prev2 >= prev3) greenForce += 12;
                 } else if (current < prev1 && prev1 <= prev2) {
-                    redForce += 15;
-                    if (prev2 <= prev3) redForce += 10; // Strong continuous downward momentum
+                    redForce += 18;
+                    if (prev2 <= prev3) redForce += 12;
                 }
             }
         }, 10);
@@ -315,7 +313,7 @@
 
     // Single Click Trade Execution
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button"], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button'], div.button'));
 
         let targetBtn = null;
 
@@ -361,7 +359,7 @@
         isConfigured = true;
     };
 
-    botContainer.addEventListener('click', function (e) {
+    botContainer.addEventListener('click', function (e)  {
         if (hasMoved || isDragging) return;
 
         if (!isConfigured) {
