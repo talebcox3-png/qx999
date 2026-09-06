@@ -305,7 +305,7 @@
 
     // Single Click Trade Execution
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button'], div.button'));
 
         let targetBtn = null;
 
@@ -349,10 +349,6 @@
         }
         settingsBox.style.display = 'none';
         isConfigured = true;
-    };
-
-    botContainer.getElementById('qx999-circle-bot').onclick = function (e) {
-        // handled below via botContainer listener
     };
 
     botContainer.addEventListener('click', function (e) {
