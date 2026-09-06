@@ -25,13 +25,13 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Skull size increased to 93% and perfectly centered inside the fixed shadow */
+        /* Perfectly matched with reference image (Skull sized to 105% and centered) */
         #qx999-logo-icon {
             width: 65px; height: 65px;
             background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 93%;
+            background-size: 105%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
@@ -305,7 +305,7 @@
 
     // Single Click Trade Execution
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
@@ -351,7 +351,7 @@
         isConfigured = true;
     };
 
-    botContainer.addEventListener('click', function (e) {
+    botContainer.addEventListener('click', function (e)  {
         if (hasMoved || isDragging) return;
 
         if (!isConfigured) {
