@@ -21,13 +21,13 @@
             width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.55);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
             background-color: transparent;
+            border: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 35px rgba(0, 255, 102, 0.6), 0 4px 15px rgba(0, 0, 0, 0.7) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.6), 0 4px 14px rgba(0, 0, 0, 0.7) !important;
             transform: scale(1.08);
         }
         ::placeholder {
