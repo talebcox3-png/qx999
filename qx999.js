@@ -26,25 +26,25 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(10, 15, 22, 0.85);
+            background-color: rgba(10, 10, 10, 0.85);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 80%;
+            background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(0,255,102,0.3);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
             pointer-events: none;
         }
         #qx999-circle-bot.glowing {
-            animation: fullContainerGlow 0.8s infinite alternate ease-in-out !important;
+            animation: intenseGlow 0.6s infinite alternate ease-in-out !important;
         }
-        @keyframes fullContainerGlow {
-            0% { filter: drop-shadow(0 0 25px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.85)); }
-            100% { filter: drop-shadow(0 0 45px rgba(0, 255, 102, 1)) drop-shadow(0 0 90px rgba(0, 255, 102, 1)); }
+        @keyframes intenseGlow {
+            0% { filter: drop-shadow(0 0 25px rgba(0, 255, 102, 0.9)) drop-shadow(0 0 50px rgba(0, 255, 102, 0.7)); }
+            100% { filter: drop-shadow(0 0 40px rgba(0, 255, 102, 1)) drop-shadow(0 0 80px rgba(0, 255, 102, 1)); }
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
-            margin-top: 4px; text-shadow: 0 0 5px #000000; font-family: Arial, sans-serif; pointer-events: none;
+            margin-top: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
         }
         ::placeholder { color: #777777; }
     `;
@@ -198,38 +198,32 @@
         }, 50);
     }
 
-    // Smooth Top-to-Bottom Laser Scan Animation with Time Sync
     function drawSmoothScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
         let progress = Math.min(elapsedSec / scanDurationSec, 1);
 
-        // Calculate exact Y position smoothly from top to bottom
         let scanY = progress * scanCanvas.height;
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        // Smooth trailing laser effect above the line
-        let trailHeight = 220;
+        let trailHeight = 180;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 136, 0.2)');
-        grad.addColorStop(1, 'rgba(0, 255, 136, 0.85)');
+        grad.addColorStop(1, 'rgba(0, 255, 136, 0.7)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
-        // Glowing Laser Line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 15;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        // Exact 1 second before scan finishes, place the trade automatically
         if (elapsedSec >= (scanDurationSec - 1) && !tradeExecuted) {
             tradeExecuted = true;
             if (greenForce >= redForce) {
