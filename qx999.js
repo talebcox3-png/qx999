@@ -31,11 +31,18 @@
             border-radius: 50%;
             border: none;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-            transition: all 0.3s ease-in-out;
+            transition: all 0.4s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            border: 2px solid #00ff88;
-            box-shadow: 0 0 25px #00ff88, inset 0 0 10px #00ff88 !important;
+            animation: smokeGlowPulse 1.5s infinite alternate;
+        }
+        @keyframes smokeGlowPulse {
+            0% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 255, 136, 0.2);
+            }
+            100% {
+                box-shadow: 0 0 35px rgba(0, 255, 136, 0.9), 0 0 65px rgba(0, 255, 136, 0.6), 0 0 95px rgba(0, 255, 136, 0.3);
+            }
         }
         #qx999-circle-bot.glowing span {
             color: #00ff88 !important;
@@ -164,7 +171,7 @@
 
         if (!hasTrigged && elapsedSec >= (scanDelay - afterTradeScan)) {
             hasTrigged = true;
-            executeCandleMovementTrade();
+            executeTradeTrigger();
         }
 
         if (elapsedSec >= scanDelay) {
@@ -174,13 +181,13 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let grad = ctx.createLinearGradient(0, scanY - 180, 0, scanY);
+        let grad = ctx.createLinearGradient(0, scanY - 160, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
-        grad.addColorStop(0.6, 'rgba(0, 255, 136, 0.12)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 136, 0.15)');
         grad.addColorStop(1, 'rgba(0, 255, 136, 0.45)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - 180), scanCanvas.width, 180);
+        ctx.fillRect(0, Math.max(0, scanY - 160), scanCanvas.width, 160);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff88';
@@ -216,7 +223,7 @@
         isScanning = false;
     }
 
-    function executeCandleMovementTrade() {
+    function executeTradeTrigger() {
         let finalDir = tradeDirection;
 
         if (finalDir === "Random") {
@@ -233,16 +240,24 @@
             }
         }
 
-        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a, .btn'));
-        let targetKey = finalDir.toLowerCase();
+        let isUp = (finalDir.toLowerCase() === "up");
+        let allButtons = Array.from(document.querySelectorAll('button, div[role="button"], a, .btn, .button-call, .button-put'));
 
-        let clickBtn = buttons.find(el => {
+        let targetBtn = allButtons.find(el => {
             let txt = (el.innerText || el.textContent || '').toLowerCase();
-            return txt.includes(targetKey) || (targetKey === 'up' && txt.includes('call')) || (targetKey === 'down' && txt.includes('put'));
+            let cls = (el.className || '').toLowerCase();
+
+            if (isUp) {
+                return txt.includes('up') || txt.includes('call') || txt.includes('higher') || txt.includes('buy') || cls.includes('call') || cls.includes('up') || cls.includes('green');
+            } else {
+                return txt.includes('down') || txt.includes('put') || txt.includes('lower') || txt.includes('sell') || cls.includes('put') || cls.includes('down') || cls.includes('red');
+            }
         });
 
-        if (clickBtn) {
-            clickBtn.click();
+        if (targetBtn) {
+            targetBtn.click();
+            let event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+            targetBtn.dispatchEvent(event);
         }
     }
 
