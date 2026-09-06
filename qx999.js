@@ -21,22 +21,23 @@
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            padding: 8px; border-radius: 50%;
+            padding: 4px; border-radius: 50%;
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(10, 10, 10, 0.85);
+            background-color: #0c150e;
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 85%;
+            background-size: 82%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            border: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.75), inset 0 0 10px rgba(0, 0, 0, 0.8);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 35px #00ff66, 0 0 15px #00ff66, inset 0 0 20px #00ff66 !important;
+            box-shadow: 0 0 30px #00ff66, 0 0 15px #00ff66, inset 0 0 15px #00ff66 !important;
             transform: scale(1.08);
         }
         #qx999-circle-bot span {
@@ -195,45 +196,6 @@
         }, 50);
     }
 
-    // স্কাল শ্যাডো (৭৫% দৃশ্যমানতা ও মাঝবরাবর পজিশন)
-    function drawSkullShadow() {
-        let cx = scanCanvas.width / 2;
-        let cy = scanCanvas.height / 2;
-        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
-
-        ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.75)"; // ৭৫% দৃশ্যমানতা ও হালকা কালো টোন
-        ctx.shadowColor = "rgba(0, 255, 102, 0.4)";
-        ctx.shadowBlur = 20;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
-        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
-        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
-        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + size * 0.06);
-        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
-        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
-        ctx.closePath();
-        ctx.fill();
-
-        for (let i = -2; i <= 2; i++) {
-            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
-        }
-
-        ctx.restore();
-    }
-
-    // স্মুথ ও স্লো স্ক্যান লাইন অ্যানিমেশন
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -244,7 +206,6 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        drawSkullShadow();
 
         let trailHeight = 140;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
@@ -265,7 +226,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 3.5; // লাইনটি স্মুথ ও স্লো করার জন্য গতি কমানো হয়েছে
+        scanY += 5.2;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -345,7 +306,7 @@
 
         isScanning = true;
         tradeExecuted = false;
-        logoIcon.classList.add('glowing'); // লোগো গ্লোয়িং অ্যানিমেশন চালু
+        logoIcon.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
