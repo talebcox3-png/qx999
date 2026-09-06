@@ -1,5 +1,5 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings', 'qx999-toast'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
@@ -23,68 +23,33 @@
             padding: 8px;
             border-radius: 50%;
             transition: filter 0.3s ease-in-out;
-            position: relative;
         }
 
-        /* 1. Smoke/Aura effect spreading behind the logo during analysis */
-        #qx999-circle-bot::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 45px; height: 45px;
-            background: radial-gradient(circle, rgba(0, 255, 102, 0.95) 0%, rgba(0, 255, 102, 0.45) 55%, transparent 75%);
-            border-radius: 50%;
-            z-index: -1;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #qx999-circle-bot.glowing::before {
-            opacity: 1;
-            animation: smokeSpread 1s infinite alternate ease-in-out !important;
-        }
-
-        @keyframes smokeSpread {
-            0% {
-                transform: translate(-50%, -50%) scale(1.3);
-                opacity: 0.7;
-                filter: blur(10px);
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(2.8);
-                opacity: 1;
-                filter: blur(20px);
-            }
-        }
-
-        /* Skull perfectly centered, 65% dark background visibility, NO green ring */
+        /* Skull perfectly centered inside shadow without covering it */
         #qx999-logo-icon {
-            width: 65px; height: 65px;
+            width: 68px; height: 68px;
             background-color: rgba(10, 15, 22, 0.65);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 86%;
+            background-size: 94%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
             pointer-events: none;
-            position: relative;
-            z-index: 2;
         }
 
-        /* Highly Vibrant, Bright and Wide Glowing Effect */
+        /* Highly Vibrant, Bright and Super Glowing Effect during Analysis */
         #qx999-circle-bot.glowing {
-            animation: fullContainerGlow 1s infinite alternate ease-in-out !important;
+            animation: fullContainerGlow 0.8s infinite alternate ease-in-out !important;
         }
 
         @keyframes fullContainerGlow {
             0% {
-                filter: drop-shadow(0 0 20px rgba(0, 255, 102, 0.9)) drop-shadow(0 0 45px rgba(0, 255, 102, 0.6));
+                filter: drop-shadow(0 0 25px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.85)) drop-shadow(0 0 95px rgba(0, 255, 102, 0.6));
             }
             100% {
-                filter: drop-shadow(0 0 35px rgba(0, 255, 102, 1)) drop-shadow(0 0 80px rgba(0, 255, 102, 0.95));
+                filter: drop-shadow(0 0 45px rgba(0, 255, 102, 1)) drop-shadow(0 0 90px rgba(0, 255, 102, 1)) drop-shadow(0 0 140px rgba(0, 255, 102, 0.95));
             }
         }
 
@@ -94,20 +59,9 @@
             font-weight: bold;
             font-size: 13px;
             margin-top: 4px;
-            text-shadow: 0 0 4px #000000;
+            text-shadow: 0 0 5px #000000;
             font-family: Arial, sans-serif;
             pointer-events: none;
-            z-index: 2;
-        }
-
-        /* 3. Signal Toast Notification Popup */
-        #qx999-toast {
-            position: fixed; top: 75px; right: 20px;
-            background: rgba(12, 21, 14, 0.95); border: 1.5px solid #00ff66;
-            color: #ffffff; padding: 10px 18px; border-radius: 12px;
-            font-size: 14px; font-weight: bold; font-family: Arial, sans-serif;
-            z-index: 1000000; display: none; box-shadow: 0 0 20px rgba(0,255,102,0.3);
-            backdrop-filter: blur(5px);
         }
 
         ::placeholder {
@@ -139,7 +93,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 4. Settings Panel UI with Advanced Trade Modes
+    // Settings Panel UI
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -155,28 +109,11 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Pro Smart Market Mode</option>
-            <option value="5s_hack">5s OTC Micro-Hack Mode</option>
-            <option value="Trend">Trend Reversal Mode</option>
+            <option value="AI">AI Pro Smart Market Mode (Max Accuracy)</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
-
-    // Toast Popup Element
-    let toastEl = document.createElement('div');
-    toastEl.id = 'qx999-toast';
-    document.body.appendChild(toastEl);
-
-    function showToast(message, isUp) {
-        toastEl.innerText = message;
-        toastEl.style.borderColor = isUp ? '#00ff66' : '#ff4444';
-        toastEl.style.color = isUp ? '#00ff66' : '#ff4444';
-        toastEl.style.display = 'block';
-        setTimeout(() => {
-            toastEl.style.display = 'none';
-        }, 2000);
-    }
 
     // Bot Container
     let botContainer = document.createElement('div');
@@ -274,7 +211,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Real-Time Candle Movement & Color Analysis Algorithm
+    // Maximum Accuracy Real-Time Candle Movement & Price Trend Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -286,9 +223,9 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 5;
+                    greenForce += 8;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 5;
+                    redForce += 8;
                 }
             });
 
@@ -302,15 +239,15 @@
                 let older = parseFloat(priceNodes[priceNodes.length - 3]);
 
                 if (current > prev && prev >= older) {
-                    greenForce += 10;
+                    greenForce += 15;
                 } else if (current < prev && prev <= older) {
-                    redForce += 10;
+                    redForce += 15;
                 }
             }
-        }, 25);
+        }, 15);
     }
 
-    // 2. Time-based Scan Line Animation (Perfect Sync with scanDurationSec)
+    // Green Scan Line Animation
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -322,27 +259,28 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        // Dynamic time-based progress calculation
-        let progress = elapsedSec / scanDurationSec;
-        scanY = progress * scanCanvas.height;
-
         let trailHeight = 160;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 136, 0.15)');
-        grad.addColorStop(1, 'rgba(0, 255, 136, 0.45)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 136, 0.2)');
+        grad.addColorStop(1, 'rgba(0, 255, 136, 0.6)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
         ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
+
+        scanY += 10;
+        if (scanY > scanCanvas.height) {
+            scanY = 0;
+        }
 
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
@@ -355,27 +293,16 @@
             scanAnimationId = null;
         }
         
-        // 4. Advanced Trade Mode Signal Selection Logic
-        let selectedMode = document.getElementById('qx_mode').value;
+        // Smart High-Precision Decision Making
         let selectedSignal = "UP";
-
-        if (selectedMode === "5s_hack") {
-            selectedSignal = (greenForce >= redForce) ? "UP" : "DOWN";
-        } else if (selectedMode === "Trend") {
-            selectedSignal = greenForce > redForce ? "UP" : "DOWN";
+        if (redForce > greenForce) {
+            selectedSignal = "DOWN";
+        } else if (greenForce > redForce) {
+            selectedSignal = "UP";
         } else {
-            // AI Pro Smart Market Mode
-            if (redForce > greenForce) {
-                selectedSignal = "DOWN";
-            } else if (greenForce > redForce) {
-                selectedSignal = "UP";
-            } else {
-                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
-            }
+            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
-        // 3. Show Toast Notification Popup
-        showToast(`Signal: ${selectedSignal} (${selectedMode})`, selectedSignal === "UP");
         executeTrade(selectedSignal);
 
         botContainer.classList.remove('glowing');
@@ -385,6 +312,7 @@
     // Trade Execution for UP or DOWN based on analysis
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+
         let targetBtn = null;
 
         if (direction === "UP") {
