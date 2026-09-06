@@ -1,5 +1,5 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
@@ -19,25 +19,25 @@
             position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
             display: flex; flex-direction: column; align-items: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            background: rgba(15, 23, 42, 0.45);
+            background: rgba(10, 18, 30, 0.6);
             border-radius: 50%;
             padding: 14px;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.75), inset 0 0 12px rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         #qx999-logo-icon {
             width: 62px; height: 62px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
         #qx999-circle-bot.glowing {
-            box-shadow: 0 0 25px #00ff66, 0 0 50px rgba(0, 255, 102, 0.7), inset 0 0 15px #00ff66 !important;
+            box-shadow: 0 0 30px #00ff66, 0 0 60px rgba(0, 255, 102, 0.9), inset 0 0 20px #00ff66 !important;
             animation: pulseGlow 0.8s infinite alternate;
         }
 
@@ -57,9 +57,9 @@
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 310px; background: #07120a; border: 1.5px solid #00e676;
         color: #ffffff; padding: 25px 20px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0, 230, 118, 0.2); z-index: 999999;
+        box-shadow: 0 0 30px rgba(0, 230, 118, 0.3); z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        text-align: center; display: ${isAlreadyLoggedIn ? 'block' : 'block'};
+        text-align: center; display: ${isAlreadyLoggedIn ? 'none' : 'block'};
     `;
 
     loginBox.innerHTML = `
@@ -76,7 +76,7 @@
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 300px; background: #07120a; border: 1.5px solid #00e676;
         color: #ffffff; padding: 20px; border-radius: 18px;
-        box-shadow: 0 0 25px rgba(0, 230, 118, 0.2); z-index: 999999;
+        box-shadow: 0 0 25px rgba(0, 230, 118, 0.3); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
@@ -93,7 +93,7 @@
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = 'none';
+    botContainer.style.display = isAlreadyLoggedIn ? 'flex' : 'none';
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
@@ -262,7 +262,7 @@
         }
     }
 
-    document.getElementById('qx_login_btn').onclick = function () {
+    let handleLogin = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
@@ -274,9 +274,10 @@
         }
     };
 
+    document.getElementById('qx_login_btn').onclick = handleLogin;
     document.getElementById('qx_pass').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
-            document.getElementById('qx_login_btn').click();
+            handleLogin();
         }
     });
 
