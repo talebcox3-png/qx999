@@ -22,12 +22,12 @@
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
             border: 2px solid #00ff66;
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.75), inset 0 0 10px rgba(0, 255, 102, 0.4);
-            background-color: rgba(0, 255, 102, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.55);
+            background-color: transparent;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 45px #00ff66, 0 0 20px #00ff66, inset 0 0 20px #00ff66 !important;
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.6), 0 4px 15px rgba(0, 0, 0, 0.7) !important;
             transform: scale(1.08);
         }
         ::placeholder {
