@@ -4,23 +4,17 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-NJQX";
+    let licenseKey = "ALVI5S-QXHECK";
     let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png";
-    let isScanning = false;
+    let scanDurationSec = 3; 
+    let isConfigured = false; 
 
-    let savedPass = localStorage.getItem("qx999_saved_pass") || licenseKey;
-    let scanDelay = parseInt(localStorage.getItem("qx999_scan_delay")) || 5;
-    let afterTradeScan = parseInt(localStorage.getItem("qx999_after_trade_scan")) || 3;
-    let tradeDirection = localStorage.getItem("qx999_trade_direction") || "Random";
-    let isConfigured = false;
+    let greenForce = 0;
+    let redForce = 0;
+    let analysisTimer = null;
 
     const style = document.createElement('style');
     style.innerHTML = `
-        #qx999-circle-bot {
-            position: fixed; top: 120px; right: 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 999999; cursor: move; user-select: none; touch-action: none;
-        }
         #qx999-logo-icon {
             width: 65px; height: 65px;
             background-color: rgba(10, 15, 20, 0.85);
@@ -36,117 +30,128 @@
         #qx999-logo-icon.glowing {
             border: none;
             box-shadow: 0 0 25px #00ff88, inset 0 0 10px #00ff88 !important;
+            transform: scale(1.08);
         }
-        #qx999-circle-bot.glowing span {
-            color: #00ff88 !important;
-            text-shadow: 0 0 10px #00ff88;
+        ::placeholder {
+            color: #777777;
+            letter-spacing: normal;
         }
     `;
     document.head.appendChild(style);
 
+    // 1. Storage Login Logic
+    let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
+
+    // Login Box UI
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #0c1017; border: 2px solid #00ff88;
-        color: #ffffff; padding: 25px 20px; border-radius: 16px;
-        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); z-index: 999999;
-        font-family: Arial, sans-serif; text-align: center; display: block;
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 5px 0; color:#00ff88; font-size:22px; font-weight:700;">QX999 Login</h3>
-        <p style="font-size:12px; color:#9ca3af; margin:0 0 20px 0;">Enter password to continue</p>
-        <div style="position:relative; width:100%; margin-bottom:20px;">
-            <input type="password" id="qx_pass" value="${savedPass}" style="width:100%; padding:12px; background:#161d2a; color:#ffffff; border:1px solid #00ff88; border-radius:8px; box-sizing:border-box; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
-        </div>
-        <button id="qx_login_btn" style="width:100%; padding:12px; background:#00ff88; color:#0b0e14; border:none; border-radius:8px; font-weight:800; font-size:16px; cursor:pointer;">Enter</button>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500; letter-spacing:0.5px;">QX999 Login</h3>
+        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0; font-weight:400;">Enter password to continue</p>
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; transition: opacity 0.2s;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
+    // 2. Settings Panel UI
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #0c1017; border: 2px solid #00ff88;
-        color: #ffffff; padding: 20px; border-radius: 16px;
-        box-shadow: 0 0 30px rgba(0,255,136,0.3); z-index: 999999;
+        width: 310px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 22px; border-radius: 20px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
         font-family: Arial, sans-serif; display: none;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff88; font-size:18px; text-align:center;">QX999 Settings</h3>
-        <label style="font-size:12px; color:#9ca3af;">Scan delay (seconds)</label>
-        <input type="number" id="cfg_scan_delay" value="${scanDelay}" style="width:100%; padding:10px; background:#161d2a; color:#fff; border:1px solid #00ff88; border-radius:8px; margin:5px 0 15px 0; box-sizing:border-box;">
-        
-        <label style="font-size:12px; color:#9ca3af;">After trade scan (seconds)</label>
-        <input type="number" id="cfg_after_trade" value="${afterTradeScan}" style="width:100%; padding:10px; background:#161d2a; color:#fff; border:1px solid #00ff88; border-radius:8px; margin:5px 0 15px 0; box-sizing:border-box;">
-        
-        <label style="font-size:12px; color:#9ca3af;">Trade direction</label>
-        <div style="display:flex; gap:8px; margin:8px 0 20px 0;">
-            <button class="dir-btn" data-dir="Up" style="flex:1; padding:8px; background:#161d2a; color:#fff; border:1px solid #374151; border-radius:6px; cursor:pointer;">Up</button>
-            <button class="dir-btn" data-dir="Down" style="flex:1; padding:8px; background:#161d2a; color:#fff; border:1px solid #374151; border-radius:6px; cursor:pointer;">Down</button>
-            <button class="dir-btn" data-dir="Random" style="flex:1; padding:8px; background:#00ff88; color:#000; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Random</button>
-        </div>
-        <button id="cfg_save_btn" style="width:100%; padding:12px; background:#00ff88; color:#0b0e14; border:none; border-radius:8px; font-weight:800; font-size:15px; cursor:pointer;">Save</button>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Analysis Delay (Sec):</label>
+        <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
+        <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
+            <option value="AI">AI Trade</option>
+        </select>
+        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
     document.body.appendChild(settingsBox);
 
+    // 3. Bot Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = 'none';
+    botContainer.style.cssText = `
+        position: fixed; top: 120px; right: 20px;
+        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
+        z-index: 999999; cursor: move; user-select: none;
+        touch-action: none;
+    `;
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
 
     let logoText = document.createElement('span');
-    logoText.style.cssText = `color: #ffffff; font-weight: bold; font-size: 11px; margin-top: 4px; text-shadow: 0 0 4px #000; transition: color 0.3s;`;
+    logoText.style.cssText = `
+        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
+        text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
+    `;
     logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    let dirButtons = settingsBox.querySelectorAll('.dir-btn');
-    dirButtons.forEach(btn => {
-        btn.onclick = () => {
-            dirButtons.forEach(b => {
-                b.style.background = '#161d2a';
-                b.style.color = '#fff';
-                b.style.border = '1px solid #374151';
-            });
-            btn.style.background = '#00ff88';
-            btn.style.color = '#000';
-            btn.style.border = 'none';
-            tradeDirection = btn.getAttribute('data-dir');
-        };
-    });
-
+    // Draggable Logic
     let isDragging = false, startX, startY, initialX, initialY;
-    botContainer.addEventListener('pointerdown', (e) => {
+    
+    function dragStart(e) {
         isDragging = false;
-        startX = e.clientX; startY = e.clientY;
-        initialX = botContainer.offsetLeft; initialY = botContainer.offsetTop;
-        botContainer.setPointerCapture(e.pointerId);
-    });
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        initialX = botContainer.offsetLeft;
+        initialY = botContainer.offsetTop;
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('touchmove', dragMove);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchend', dragEnd);
+    }
 
-    botContainer.addEventListener('pointermove', (e) => {
-        if (startX === undefined) return;
-        let dx = e.clientX - startX, dy = e.clientY - startY;
-        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) isDragging = true;
+    function dragMove(e) {
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        let dx = clientX - startX;
+        let dy = clientY - startY;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
         botContainer.style.left = (initialX + dx) + 'px';
         botContainer.style.top = (initialY + dy) + 'px';
         botContainer.style.right = 'auto';
-    });
+    }
 
-    botContainer.addEventListener('pointerup', (e) => {
-        if (e.pointerId !== undefined && botContainer.hasPointerCapture(e.pointerId)) {
-            botContainer.releasePointerCapture(e.pointerId);
-        }
-        startX = undefined;
-    });
+    function dragEnd() {
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('touchmove', dragMove);
+        document.removeEventListener('mouseup', dragEnd);
+        document.removeEventListener('touchend', dragEnd);
+    }
 
+    botContainer.addEventListener('mousedown', dragStart);
+    botContainer.addEventListener('touchstart', dragStart);
+
+    // 4. Scan Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
-    scanCanvas.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999998; display: none;`;
+    scanCanvas.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 999998; display: none;
+    `;
     document.body.appendChild(scanCanvas);
     let ctx = scanCanvas.getContext('2d');
 
@@ -157,16 +162,36 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, scanStartTime = 0;
+    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+
+    function startRealTimeAnalysis() {
+        greenForce = 0;
+        redForce = 0;
+
+        analysisTimer = setInterval(() => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgElements.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += 2;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += 2;
+                }
+            });
+        }, 40);
+    }
 
     function drawSkullShadow() {
         let cx = scanCanvas.width / 2;
         let cy = scanCanvas.height / 2;
-        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.35;
+        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
 
         ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-        ctx.shadowColor = "rgba(0, 255, 136, 0.25)";
+        // 75% Background Visibility (Opacity set to 0.25 - Light and Non-Dark)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.shadowColor = "rgba(0, 255, 102, 0.2)";
         ctx.shadowBlur = 10;
 
         ctx.beginPath();
@@ -196,95 +221,84 @@
         ctx.restore();
     }
 
-    function drawScanLine() {
-        let elapsedSec = (Date.now() - scanStartTime) / 1000;
+    function drawSmokeScanLine() {
+        let currentTime = Date.now();
+        let elapsedSec = (currentTime - scanStartTime) / 1000;
 
-        if (elapsedSec >= scanDelay) {
-            executeTradeTrigger();
+        if (elapsedSec >= scanDurationSec) {
             finishScan();
             return;
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        
         drawSkullShadow();
 
-        let grad = ctx.createLinearGradient(0, scanY - 180, 0, scanY);
-        grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
-        grad.addColorStop(0.6, 'rgba(0, 255, 136, 0.12)');
-        grad.addColorStop(1, 'rgba(0, 255, 136, 0.45)');
+        let trailHeight = 140;
+        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
+        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.05)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.18)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.45)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - 180), scanCanvas.width, 180);
+        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
         ctx.beginPath();
-        ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 4;
-        ctx.shadowColor = '#00ff88';
+        ctx.strokeStyle = '#00ff66';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#00ff66';
         ctx.shadowBlur = 20;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
-        if (scanY > scanCanvas.height) scanY = 0;
+        scanY += 7;
+        if (scanY > scanCanvas.height) {
+            scanY = 0;
+        }
 
-        scanAnimationId = requestAnimationFrame(drawScanLine);
-    }
-
-    function startAnalysis() {
-        isScanning = true;
-        logoIcon.classList.add('glowing');
-        botContainer.classList.add('glowing');
-        scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
-        drawScanLine();
+        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
 
     function finishScan() {
+        if (analysisTimer) clearInterval(analysisTimer);
         scanCanvas.style.display = 'none';
-        if (scanAnimationId) cancelAnimationFrame(scanAnimationId);
+        if (scanAnimationId) {
+            cancelAnimationFrame(scanAnimationId);
+            scanAnimationId = null;
+        }
+        
+        let selectedSignal = "UP";
+        if (redForce > greenForce) {
+            selectedSignal = "DOWN";
+        } else if (greenForce === redForce) {
+            selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+        }
+
+        executeTrade(selectedSignal);
+
         logoIcon.classList.remove('glowing');
-        botContainer.classList.remove('glowing');
         isScanning = false;
     }
 
-    function executeTradeTrigger() {
-        let finalDir = tradeDirection;
-
-        if (finalDir === "Random") {
-            let priceNodes = Array.from(document.querySelectorAll('span, div'))
-                .map(e => e.innerText ? e.innerText.trim() : '')
-                .filter(t => /^\d+\.\d+$/.test(t));
-
-            if (priceNodes.length >= 2) {
-                let latestPrice = parseFloat(priceNodes[priceNodes.length - 1]);
-                let prevPrice = parseFloat(priceNodes[priceNodes.length - 2]);
-                finalDir = latestPrice >= prevPrice ? "Up" : "Down";
-            } else {
-                finalDir = Math.random() > 0.5 ? "Up" : "Down";
-            }
-        }
-
-        let isUp = (finalDir.toLowerCase() === "up");
-        
+    // 5. Multi-Selector Auto Trade Execution
+    function executeTrade(direction) {
         let callButtons = document.querySelectorAll('.button-call, .btn-call, [class*="call"], [class*="up"], .section-deal__button-up');
         let putButtons = document.querySelectorAll('.button-put, .btn-put, [class*="put"], [class*="down"], .section-deal__button-down');
 
         let targetBtn = null;
 
-        if (isUp) {
+        if (direction === "UP") {
             targetBtn = Array.from(callButtons).find(el => el.offsetParent !== null) || 
                         Array.from(document.querySelectorAll('button, div[role="button"]')).find(el => {
                             let txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-                            return txt === 'up' || txt === 'call' || txt === 'higher';
+                            return txt === 'up' || txt === 'call' || txt === 'higher' || txt.includes('কল');
                         });
         } else {
             targetBtn = Array.from(putButtons).find(el => el.offsetParent !== null) || 
                         Array.from(document.querySelectorAll('button, div[role="button"]')).find(el => {
                             let txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-                            return txt === 'down' || txt === 'put' || txt === 'lower';
+                            return txt === 'down' || txt === 'put' || txt === 'lower' || txt.includes('পুট');
                         });
         }
 
@@ -295,36 +309,41 @@
         }
     }
 
+    // 6. Login & Settings Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
-            localStorage.setItem("qx999_saved_pass", inputPass);
+            localStorage.setItem("qx999_logged_in", "true");
             loginBox.remove();
             botContainer.style.display = 'flex';
-        } else {
-            alert("Incorrect Password!");
         }
     };
 
-    document.getElementById('cfg_save_btn').onclick = function () {
-        scanDelay = parseInt(document.getElementById('cfg_scan_delay').value) || 5;
-        afterTradeScan = parseInt(document.getElementById('cfg_after_trade').value) || 3;
-
-        localStorage.setItem("qx999_scan_delay", scanDelay);
-        localStorage.setItem("qx999_after_trade_scan", afterTradeScan);
-        localStorage.setItem("qx999_trade_direction", tradeDirection);
-
-        isConfigured = true;
+    document.getElementById('qx_save_btn').onclick = function () {
+        let delayInput = parseInt(document.getElementById('qx_delay').value);
+        if (!isNaN(delayInput) && delayInput > 0) {
+            scanDurationSec = delayInput;
+        }
         settingsBox.style.display = 'none';
+        isConfigured = true;
     };
 
-    botContainer.onclick = function () {
-        if (isDragging || isScanning) return;
+    botContainer.addEventListener('click', function () {
+        if (isDragging) return;
 
         if (!isConfigured) {
             settingsBox.style.display = 'block';
-        } else {
-            startAnalysis();
+            return;
         }
-    };
+
+        if (isScanning) return;
+
+        isScanning = true;
+        logoIcon.classList.add('glowing');
+        scanCanvas.style.display = 'block';
+        scanY = 0;
+        scanStartTime = Date.now();
+        startRealTimeAnalysis();
+        drawSmokeScanLine();
+    });
 })();
