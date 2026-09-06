@@ -22,34 +22,34 @@
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
             padding: 8px;
             border-radius: 50%;
-            transition: all 0.3s ease-in-out;
+            transition: filter 0.3s ease-in-out;
         }
 
-        /* 85% Visible Background & Perfect Shadow Matching Image Right Side */
+        /* Light Soft Background (78% Visibility) & Soft Shadow */
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: 82%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
             pointer-events: none;
         }
 
-        /* Full Container Glow extended up to 'QX999' Text (As in Image 3) */
+        /* Slightly Deeper/Stronger Glow Effect During Analysis */
         #qx999-circle-bot.glowing {
             animation: fullContainerSmoke 1.2s infinite alternate ease-in-out !important;
         }
 
         @keyframes fullContainerSmoke {
             0% {
-                filter: drop-shadow(0 0 15px rgba(0, 255, 102, 0.7)) drop-shadow(0 0 30px rgba(0, 255, 102, 0.4));
+                filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.75)) drop-shadow(0 0 30px rgba(0, 255, 102, 0.45));
             }
             100% {
-                filter: drop-shadow(0 0 30px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.7));
+                filter: drop-shadow(0 0 30px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.75));
             }
         }
 
@@ -109,7 +109,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Trade</option>
+            <option value="AI">AI Pro Trade</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -131,42 +131,66 @@
     document.body.appendChild(botContainer);
 
     // Draggable Logic
-    let isDragging = false, startX, startY, initialX, initialY;
-    
+    let isDragging = false, hasMoved = false;
+    let startX = 0, startY = 0, initialX = 0, initialY = 0;
+
     function dragStart(e) {
-        isDragging = false;
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        hasMoved = false;
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
         startX = clientX;
         startY = clientY;
-        initialX = botContainer.offsetLeft;
-        initialY = botContainer.offsetTop;
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('touchmove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-        document.addEventListener('touchend', dragEnd);
+        
+        let rect = botContainer.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+
+        botContainer.style.right = 'auto';
+        botContainer.style.left = initialX + 'px';
+        botContainer.style.top = initialY + 'px';
+
+        if (e.type === 'mousedown') {
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+        } else if (e.type === 'touchstart') {
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+        }
     }
 
     function dragMove(e) {
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
         let dx = clientX - startX;
         let dy = clientY - startY;
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
-        botContainer.style.left = (initialX + dx) + 'px';
-        botContainer.style.top = (initialY + dy) + 'px';
-        botContainer.style.right = 'auto';
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasMoved = true;
+            isDragging = true;
+            if (e.cancelable) e.preventDefault();
+        }
+
+        if (isDragging) {
+            botContainer.style.left = (initialX + dx) + 'px';
+            botContainer.style.top = (initialY + dy) + 'px';
+        }
     }
 
     function dragEnd() {
         document.removeEventListener('mousemove', dragMove);
-        document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('mouseup', dragEnd);
+        document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('touchend', dragEnd);
+        
+        setTimeout(() => {
+            isDragging = false;
+        }, 50);
     }
 
     botContainer.addEventListener('mousedown', dragStart);
-    botContainer.addEventListener('touchstart', dragStart);
+    botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
     // Scan Canvas Setup
     let scanCanvas = document.createElement('canvas');
@@ -187,7 +211,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Realtime Market Analysis
+    // High Precision Market Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -199,9 +223,9 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 2;
+                    greenForce += 3;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 2;
+                    redForce += 3;
                 }
             });
 
@@ -209,13 +233,15 @@
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length >= 2) {
-                let latestPrice = parseFloat(priceNodes[priceNodes.length - 1]);
-                let prevPrice = parseFloat(priceNodes[priceNodes.length - 2]);
-                if (latestPrice > prevPrice) greenForce += 3;
-                else if (latestPrice < prevPrice) redForce += 3;
+            if (priceNodes.length >= 3) {
+                let current = parseFloat(priceNodes[priceNodes.length - 1]);
+                let prev = parseFloat(priceNodes[priceNodes.length - 2]);
+                let older = parseFloat(priceNodes[priceNodes.length - 3]);
+
+                if (current > prev && prev >= older) greenForce += 5;
+                else if (current < prev && prev <= older) redForce += 5;
             }
-        }, 40);
+        }, 30);
     }
 
     // Green Scan Line Animation
@@ -325,8 +351,8 @@
         isConfigured = true;
     };
 
-    botContainer.addEventListener('click', function () {
-        if (isDragging) return;
+    botContainer.addEventListener('click', function (e) {
+        if (hasMoved || isDragging) return;
 
         if (!isConfigured) {
             settingsBox.style.display = 'block';
