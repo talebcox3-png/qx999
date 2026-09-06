@@ -15,51 +15,49 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Main Container */
+        /* Main Bot Container */
         #qx999-circle-bot {
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
         }
 
-        /* 80% Dark circular background with perfectly centered enlarged Skull image */
+        /* Adjusted Logo size & Shadow as seen on the left side of 1st Image */
         #qx999-logo-icon {
-            width: 70px; height: 70px;
-            background-color: rgba(0, 0, 0, 0.80);
+            width: 62px; height: 62px;
+            background-color: rgba(10, 15, 20, 0.85);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 88%;
+            background-size: 80%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.80);
-            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.75);
+            transition: box-shadow 0.3s ease-in-out;
             pointer-events: none;
         }
 
-        /* Active Green Glowing Smoke Animation (As in 1st Image) */
+        /* Green Glowing Smoke Spread Effect (As seen in 2nd Image) - No Scale Up */
         #qx999-logo-icon.glowing {
-            animation: greenSmokeGlow 1.2s infinite alternate ease-in-out !important;
+            animation: softGreenSmoke 1.2s infinite alternate ease-in-out !important;
         }
 
-        @keyframes greenSmokeGlow {
+        @keyframes softGreenSmoke {
             0% {
-                box-shadow: 0 0 20px rgba(0, 255, 102, 0.7), 0 0 40px rgba(0, 255, 102, 0.5), 0 0 60px rgba(0, 255, 102, 0.3), 0 6px 20px rgba(0, 0, 0, 0.80);
-                transform: scale(1.02);
+                box-shadow: 0 0 15px rgba(0, 255, 102, 0.6), 0 0 30px rgba(0, 255, 102, 0.4), 0 0 50px rgba(0, 255, 102, 0.2);
             }
             100% {
-                box-shadow: 0 0 35px rgba(0, 255, 102, 1), 0 0 60px rgba(0, 255, 102, 0.8), 0 0 90px rgba(0, 255, 102, 0.5), 0 6px 20px rgba(0, 0, 0, 0.80);
-                transform: scale(1.06);
+                box-shadow: 0 0 25px rgba(0, 255, 102, 0.9), 0 0 50px rgba(0, 255, 102, 0.7), 0 0 80px rgba(0, 255, 102, 0.4);
             }
         }
 
-        /* Text stays pure white always without turning green */
+        /* Text stays white strictly */
         #qx999-circle-bot span {
             color: #ffffff !important;
             font-weight: bold;
-            font-size: 13px;
-            margin-top: 6px;
-            text-shadow: 0 0 5px #000000, 0 0 10px #000000 !important;
+            font-size: 12px;
+            margin-top: 5px;
+            text-shadow: 0 0 4px #000000;
             font-family: Arial, sans-serif;
             pointer-events: none;
         }
@@ -71,7 +69,7 @@
     `;
     document.head.appendChild(style);
 
-    // 1. Storage Login Logic
+    // Storage Login Check
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
 
     // Login Box UI
@@ -93,7 +91,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Settings Panel UI
+    // Settings Panel UI
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -115,7 +113,7 @@
     `;
     document.body.appendChild(settingsBox);
 
-    // 3. Bot Container
+    // Bot Container Creation
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.display = isLoggedIn ? 'flex' : 'none';
@@ -130,7 +128,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Draggable Logic
+    // Dragging Logic
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -168,7 +166,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    // 4. Scan Canvas
+    // Scan Canvas Setup
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -187,7 +185,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Advanced Analysis Logic
+    // Realtime Market Analysis
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -218,7 +216,7 @@
         }, 40);
     }
 
-    // Scan Line Animation
+    // Green Scan Line Animation
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -277,7 +275,7 @@
         isScanning = false;
     }
 
-    // Auto Trade Execution
+    // Fixed Single Click Trade Execution
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
@@ -301,14 +299,13 @@
             });
         }
 
+        // Single click only to prevent double trade placement
         if (targetBtn) {
             targetBtn.click();
-            let clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-            targetBtn.dispatchEvent(clickEvent);
         }
     }
 
-    // Handlers
+    // UI Click Actions
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
