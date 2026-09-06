@@ -19,14 +19,17 @@
         }
         #qx999-logo-icon {
             width: 75px; height: 75px;
-            background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('${logoUrl}') center/cover no-repeat;
+            background-color: rgba(0, 0, 0, 0.55);
+            background-image: url('${logoUrl}');
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
             border-radius: 50%;
-            border: 2.5px solid #00ff88;
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.75);
+            border: none;
+            box-shadow: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 40px #00ff88, inset 0 0 20px #00ff88 !important;
             transform: scale(1.08);
         }
         ::placeholder {
