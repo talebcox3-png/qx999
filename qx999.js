@@ -18,12 +18,11 @@
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
         }
         #qx999-logo-icon {
-            width: 65px; height: 65px;
-            background: url('${logoUrl}') center/cover no-repeat;
+            width: 75px; height: 75px;
+            background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff88;
+            border: 2.5px solid #00ff88;
             box-shadow: 0 0 25px rgba(0, 255, 136, 0.75);
-            background-color: rgba(0, 255, 136, 0.25);
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
