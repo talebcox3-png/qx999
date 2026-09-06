@@ -26,7 +26,7 @@
             position: relative;
         }
 
-        /* Perfect Tighter Glow matching reference image */
+        /* Perfect Tighter Glow matching reference */
         #qx999-circle-bot::before {
             content: '';
             position: absolute;
@@ -206,7 +206,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
-    // Scan Canvas Setup (Ultra Smooth Scan Line Animation)
+    // Scan Canvas Setup (Ultra Smooth Scan Line)
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -261,7 +261,7 @@
         }, 20);
     }
 
-    // Ultra Smooth Scan Line Animation matching the video reference
+    // Ultra Smooth Scan Line Animation
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -273,7 +273,6 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        // Smooth continuous time-based interpolation for fluidity
         let progress = elapsedSec / scanDurationSec;
         scanY = progress * scanCanvas.height * 2; 
         if (scanY > scanCanvas.height) {
