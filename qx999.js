@@ -25,31 +25,31 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Skull perfectly centered, adjusted size and soft background visibility matching 2nd image */
+        /* Skull perfectly centered with balanced background and smooth shadow */
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(15, 20, 25, 0.78);
+            background-color: rgba(20, 30, 40, 0.65);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 88%;
+            background-size: 86%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+            border: 1.5px solid rgba(0, 255, 102, 0.35);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             pointer-events: none;
         }
 
-        /* Vibrant Glow Effect During Analysis matching 1st image */
+        /* Vibrant and Matching Glow Effect During Analysis */
         #qx999-circle-bot.glowing {
-            animation: fullContainerSmoke 1.2s infinite alternate ease-in-out !important;
+            animation: fullContainerGlow 1.2s infinite alternate ease-in-out !important;
         }
 
-        @keyframes fullContainerSmoke {
+        @keyframes fullContainerGlow {
             0% {
-                filter: drop-shadow(0 0 18px rgba(0, 255, 102, 0.8)) drop-shadow(0 0 32px rgba(0, 255, 102, 0.5));
+                filter: drop-shadow(0 0 14px rgba(0, 255, 102, 0.75)) drop-shadow(0 0 25px rgba(0, 255, 102, 0.45));
             }
             100% {
-                filter: drop-shadow(0 0 32px rgba(0, 255, 102, 1)) drop-shadow(0 0 60px rgba(0, 255, 102, 0.8));
+                filter: drop-shadow(0 0 28px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.85));
             }
         }
 
@@ -293,7 +293,7 @@
         let selectedSignal = "UP";
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
-        } else if (greenForce === greenForce) { // fallback
+        } else if (greenForce === redForce) {
             selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
