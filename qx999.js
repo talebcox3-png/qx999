@@ -5,7 +5,7 @@
     });
 
     let licenseKey = "Alvi1234";
-    let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png";
+    let logoUrl = "https://i.ibb.co.com/35G6JMt1/1000324393-removebg-preview.png";
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -25,13 +25,13 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Skull perfectly centered, slightly larger size (90%) and 78% soft background visibility */
+        /* Skull perfectly centered, adjusted size and soft background visibility */
         #qx999-logo-icon {
             width: 65px; height: 65px;
             background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 90%;
+            background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
@@ -39,7 +39,7 @@
             pointer-events: none;
         }
 
-        /* Slightly Deeper/Stronger Glow Effect During Analysis */
+        /* Glowing Effect ONLY During Analysis (1st Image Style) */
         #qx999-circle-bot.glowing {
             animation: fullContainerSmoke 1.2s infinite alternate ease-in-out !important;
         }
@@ -349,6 +349,10 @@
         }
         settingsBox.style.display = 'none';
         isConfigured = true;
+    };
+
+    botContainer.getElementById('qx999-circle-bot').onclick = function (e) {
+        // handled below via botContainer listener
     };
 
     botContainer.addEventListener('click', function (e) {
