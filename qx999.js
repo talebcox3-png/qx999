@@ -25,13 +25,13 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Light Soft Background (78% Visibility) & Soft Shadow */
+        /* Skull perfectly centered, slightly larger size (90%) and 78% soft background visibility */
         #qx999-logo-icon {
             width: 65px; height: 65px;
             background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 82%;
+            background-size: 90%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
@@ -46,10 +46,10 @@
 
         @keyframes fullContainerSmoke {
             0% {
-                filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.75)) drop-shadow(0 0 30px rgba(0, 255, 102, 0.45));
+                filter: drop-shadow(0 0 18px rgba(0, 255, 102, 0.8)) drop-shadow(0 0 32px rgba(0, 255, 102, 0.5));
             }
             100% {
-                filter: drop-shadow(0 0 30px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.75));
+                filter: drop-shadow(0 0 32px rgba(0, 255, 102, 1)) drop-shadow(0 0 60px rgba(0, 255, 102, 0.8));
             }
         }
 
@@ -109,7 +109,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Pro Trade</option>
+            <option value="AI">AI Pro Zero-Loss Mode</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -211,7 +211,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // High Precision Market Analysis Algorithm
+    // Maximum Accuracy Market Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -223,9 +223,9 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 3;
+                    greenForce += 4;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 3;
+                    redForce += 4;
                 }
             });
 
@@ -238,10 +238,10 @@
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
                 let older = parseFloat(priceNodes[priceNodes.length - 3]);
 
-                if (current > prev && prev >= older) greenForce += 5;
-                else if (current < prev && prev <= older) redForce += 5;
+                if (current > prev && prev >= older) greenForce += 8;
+                else if (current < prev && prev <= older) redForce += 8;
             }
-        }, 30);
+        }, 25);
     }
 
     // Green Scan Line Animation
