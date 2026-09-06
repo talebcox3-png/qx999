@@ -25,13 +25,13 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Shadow size fixed, Skull inside is slightly larger (88%) and perfectly centered */
+        /* Skull size increased to 93% and perfectly centered inside the fixed shadow */
         #qx999-logo-icon {
             width: 65px; height: 65px;
             background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 88%;
+            background-size: 93%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
