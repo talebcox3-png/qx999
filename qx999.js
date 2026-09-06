@@ -4,8 +4,8 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-QXHECK";
-    let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png";
+    let licenseKey = "Alvi1234";
+    let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -16,21 +16,19 @@
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-logo-icon {
-            width: 65px; height: 65px;
-            background-color: rgba(10, 15, 20, 0.85);
-            background-image: url('${logoUrl}');
-            background-position: center;
-            background-size: 82%;
-            background-repeat: no-repeat;
+            width: 85px; height: 85px;
+            background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff66;
+            /* Exact 75% visible black shadow in the center behind the logo */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.75);
             transition: all 0.3s ease-in-out;
+            margin: 0 auto;
         }
         #qx999-logo-icon.glowing {
-            border: none;
-            box-shadow: 0 0 25px #00ff88, inset 0 0 10px #00ff88 !important;
-            transform: scale(1.08);
+            transform: scale(1.05);
+            /* Glowing pulse while keeping the 75% black shadow intact */
+            box-shadow: 0 0 30px #00ff66, inset 0 0 15px #00ff66, 0 10px 25px rgba(0, 0, 0, 0.75) !important;
         }
         ::placeholder {
             color: #777777;
@@ -88,7 +86,7 @@
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
         position: fixed; top: 120px; right: 20px;
-        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
+        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center; justify-content: center;
         z-index: 999999; cursor: move; user-select: none;
         touch-action: none;
     `;
@@ -98,8 +96,9 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
+        color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px;
         text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
+        text-align: center;
     `;
     logoText.innerText = "QX999";
 
@@ -183,44 +182,6 @@
         }, 40);
     }
 
-    function drawSkullShadow() {
-        let cx = scanCanvas.width / 2;
-        let cy = scanCanvas.height / 2;
-        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.38;
-
-        ctx.save();
-        // 75% Background Visibility (Opacity set to 0.25 - Light and Non-Dark)
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.shadowColor = "rgba(0, 255, 102, 0.2)";
-        ctx.shadowBlur = 10;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
-        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
-        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
-        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + size * 0.06);
-        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
-        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
-        ctx.closePath();
-        ctx.fill();
-
-        for (let i = -2; i <= 2; i++) {
-            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
-        }
-
-        ctx.restore();
-    }
-
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -231,28 +192,27 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        drawSkullShadow();
 
         let trailHeight = 140;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.05)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.18)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.45)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 30;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 7;
+        scanY += 10;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -283,33 +243,34 @@
 
     // 5. Multi-Selector Auto Trade Execution
     function executeTrade(direction) {
-        let callButtons = document.querySelectorAll('.button-call, .btn-call, [class*="call"], [class*="up"], .section-deal__button-up');
-        let putButtons = document.querySelectorAll('.button-put, .btn-put, [class*="put"], [class*="down"], .section-deal__button-down');
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = Array.from(callButtons).find(el => el.offsetParent !== null) || 
-                        Array.from(document.querySelectorAll('button, div[role="button"]')).find(el => {
-                            let txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-                            return txt === 'up' || txt === 'call' || txt === 'higher' || txt.includes('কল');
-                        });
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isUpText = text.includes("Up") || text.includes("Call") || text.includes("কল");
+                let isUpClass = cls.includes("btn-green") || cls.includes("button-call") || cls.includes("btn-up") || cls.includes("call");
+                return isUpText || isUpClass;
+            });
         } else {
-            targetBtn = Array.from(putButtons).find(el => el.offsetParent !== null) || 
-                        Array.from(document.querySelectorAll('button, div[role="button"]')).find(el => {
-                            let txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-                            return txt === 'down' || txt === 'put' || txt === 'lower' || txt.includes('পুট');
-                        });
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                let isDownText = text.includes("Down") || text.includes("Put") || text.includes("পুট");
+                let isDownClass = cls.includes("btn-red") || cls.includes("button-put") || cls.includes("btn-down") || cls.includes("put");
+                return isDownText || isDownClass;
+            });
         }
 
         if (targetBtn) {
             targetBtn.click();
-            let clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-            targetBtn.dispatchEvent(clickEvent);
         }
     }
 
-    // 6. Login & Settings Handlers
+    // 6. Login Event Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
