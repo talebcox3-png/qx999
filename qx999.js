@@ -207,11 +207,11 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
-    // Scan Canvas Setup
+    // Scan Canvas Setup (Fixed mobile sizing bug)
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 999998; display: none;
     `;
     document.body.appendChild(scanCanvas);
