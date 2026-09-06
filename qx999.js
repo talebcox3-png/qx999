@@ -4,7 +4,7 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "Alvi1234";
+    let licenseKey = "ALVI5S-QXHECK";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     let scanDurationSec = 3; 
     let isConfigured = false; 
@@ -15,21 +15,34 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
+        /* Main Container: 75% transparent background (25% dark layer) */
+        #qx999-circle-bot {
+            width: 76px; height: 76px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        /* Exact Logo Styling matching the left one */
         #qx999-logo-icon {
-            width: 85px; height: 85px;
+            width: 52px; height: 52px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
-            /* Exact 75% visible black shadow in the center behind the logo */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.75);
-            transition: all 0.3s ease-in-out;
-            margin: 0 auto;
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
         }
+
         #qx999-logo-icon.glowing {
+            border-color: #00ff66;
+            box-shadow: 0 0 20px #00ff66, inset 0 0 10px #00ff66 !important;
             transform: scale(1.05);
-            /* Glowing pulse while keeping the 75% black shadow intact */
-            box-shadow: 0 0 30px #00ff66, inset 0 0 15px #00ff66, 0 10px 25px rgba(0, 0, 0, 0.75) !important;
         }
+
         ::placeholder {
             color: #777777;
             letter-spacing: normal;
@@ -86,7 +99,7 @@
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.cssText = `
         position: fixed; top: 120px; right: 20px;
-        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center; justify-content: center;
+        display: ${isLoggedIn ? 'flex' : 'none'};
         z-index: 999999; cursor: move; user-select: none;
         touch-action: none;
     `;
@@ -96,9 +109,9 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px;
-        text-shadow: 0 0 8px #000, 0 0 4px #00ff66; font-family: Arial, sans-serif;
-        text-align: center;
+        color: #ffffff; font-weight: 700; font-size: 11px; margin-top: 3px;
+        text-shadow: 0 1px 3px #000; font-family: Arial, sans-serif;
+        letter-spacing: 0.3px;
     `;
     logoText.innerText = "QX999";
 
