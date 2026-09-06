@@ -5,7 +5,7 @@
     });
 
     let licenseKey = "ALVI5S-HECK";
-    let logoUrl = "https://i.ibb.co.com/S4W4dnkR/1000323502-photoaidcom-cropped.png"; 
+    let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png"; 
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -16,24 +16,23 @@
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-logo-icon {
-            width: 62px; height: 62px;
+            width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            background-color: transparent;
-            mix-blend-mode: luminosity;
-            border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 255, 255, 0.3) !important;
+            background-color: rgba(0, 0, 0, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), inset 0 0 5px rgba(0, 0, 0, 0.5) !important;
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66, 0 0 45px rgba(0, 255, 102, 0.5) !important;
+            box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66, 0 0 50px rgba(0, 255, 102, 0.6) !important;
             animation: pulseGlow 0.8s infinite alternate;
         }
 
         @keyframes pulseGlow {
-            from { transform: scale(1); box-shadow: 0 0 12px #00ff66, 0 0 25px #00ff66; }
-            to { transform: scale(1.05); box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66; }
+            from { transform: scale(1); box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66; }
+            to { transform: scale(1.08); box-shadow: 0 0 25px #00ff66, 0 0 45px #00ff66; }
         }
     `;
     document.head.appendChild(style);
