@@ -4,7 +4,7 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-QXHECK1001;
+    let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
     let scanDurationSec = 3; 
     let isConfigured = false; 
@@ -293,7 +293,7 @@
         let selectedSignal = "UP";
         if (redForce > greenForce) {
             selectedSignal = "DOWN";
-        } else if (greenForce === redForce) {
+        } else if (greenForce === greenForce) { // fallback
             selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
         }
 
@@ -363,7 +363,6 @@
 
         isScanning = true;
         botContainer.classList.add('glowing');
-        scanCanvas.style.display = 'print' || 'block'; // keeping block
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
