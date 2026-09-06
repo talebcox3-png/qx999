@@ -18,16 +18,29 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background: url('${logoUrl}') center/cover no-repeat;
+            position: relative;
             border-radius: 50%;
-            /* এখানে কালো শ্যাডো একদম বড় এবং গাঢ় করা হয়েছে ভিডিওর মতো করে */
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.95), 0 0 50px rgba(0, 0, 0, 0.8), 0 4px 20px rgba(0, 0, 0, 1);
-            background-color: transparent;
-            border: 2px solid rgba(0, 0, 0, 0.5);
+            background-color: #000;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
             transition: all 0.3s ease-in-out;
         }
+        /* লোগোর ভেতরের অংশে হালকা কালো শ্যাডো বা ওভারলে */
+        #qx999-logo-icon::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.85) 100%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        #qx999-logo-img {
+            width: 100%; height: 100%;
+            background: url('${logoUrl}') center/cover no-repeat;
+            border-radius: 50%;
+        }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 35px rgba(0, 255, 102, 0.8), 0 0 60px rgba(0, 0, 0, 0.9) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.8), 0 4px 20px rgba(0, 0, 0, 0.9) !important;
             transform: scale(1.08);
         }
         ::placeholder {
@@ -37,7 +50,6 @@
     `;
     document.head.appendChild(style);
 
-    // অটো লগইন চেক: প্রথমবার দেওয়ার পর থেকে সবসময় বক্স দেখাবে এবং পাসওয়ার্ড সেভ বা শিল্ড হয়ে থাকবে
     let savedPass = localStorage.getItem("qx999_saved_pass") || licenseKey;
 
     let loginBox = document.createElement('div');
@@ -60,10 +72,14 @@
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = 'none'; // প্রথমে লগইন বক্সের কারণে বট হাই থাকবে
+    botContainer.style.display = 'none';
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
+    
+    let logoImg = document.createElement('div');
+    logoImg.id = 'qx999-logo-img';
+    logoIcon.appendChild(logoImg);
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
@@ -97,7 +113,6 @@
         botContainer.style.right = 'auto';
     });
 
-    // অ্যানালাইসিস স্ক্যান ক্যানভাস - z-index এমনভাবে দেওয়া হয়েছে যাতে এটি স্ক্রিনের উপর দিয়ে পাস হয়
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -181,7 +196,6 @@
         }
     }
 
-    // এন্টার প্রেস করলে বা বাটন ক্লিক করলে লগইন হবে এবং পাসওয়ার্ড সেভ হয়ে থাকবে
     function handleLogin() {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
@@ -200,7 +214,6 @@
         }
     });
 
-    // যদি আগে থেকেই পাসওয়ার্ড সেভ থাকে, তবুও রিলোড দিলে লগইন বক্স দেখাবে কিন্তু পাসওয়ার্ড টাইপ করা ও শিল্ড করা অবস্থায় থাকবে
     if (savedPass === licenseKey) {
         loginBox.style.display = 'block';
         botContainer.style.display = 'none';
