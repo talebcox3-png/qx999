@@ -7,7 +7,6 @@
     let licenseKey = "ALVI5S-HECK";
     let logoUrl = "https://i.ibb.co.com/bMmtq310/1000324296-photoaidcom-cropped.png";
     let scanDurationSec = 3; 
-    let isConfigured = false; 
     let isScanning = false;
 
     const style = document.createElement('style');
@@ -21,13 +20,13 @@
             width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75);
             background-color: transparent;
             border: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 30px rgba(0, 255, 102, 0.6), 0 4px 14px rgba(0, 0, 0, 0.7) !important;
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.8), 0 4px 18px rgba(0, 0, 0, 0.85) !important;
             transform: scale(1.08);
         }
         ::placeholder {
@@ -48,12 +47,12 @@
         color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
         box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        text-align: center; display: block;
     `;
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500; letter-spacing:0.5px;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0; font-weight:400;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${savedPass}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <input type="password" id="qx_pass" value="${savedPass ? savedPass : (isLoggedIn ? licenseKey : '')}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;-webkit-text-security:disc;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -103,7 +102,7 @@
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        pointer-events: none; z-index: 999998; display: none;
+        pointer-events: none; z-index: 1; display: none;
     `;
     document.body.appendChild(scanCanvas);
     let ctx = scanCanvas.getContext('2d');
@@ -129,8 +128,8 @@
 
         let grad = ctx.createLinearGradient(0, scanY - 120, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.1)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.15)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - 120), scanCanvas.width, 120);
@@ -144,7 +143,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
+        scanY += 10;
         if (scanY > scanCanvas.height) scanY = 0;
 
         scanAnimationId = requestAnimationFrame(drawScanLine);
