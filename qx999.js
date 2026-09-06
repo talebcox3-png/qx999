@@ -25,14 +25,14 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: #0c150e;
+            background-color: rgba(12, 21, 14, 0.75);
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: 82%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75), inset 0 0 10px rgba(0, 0, 0, 0.5);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
