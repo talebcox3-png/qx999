@@ -19,12 +19,12 @@
             width: 62px; height: 62px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            background-blend-mode: overlay;
-            background-color: rgba(0, 0, 0, 0.35);
-            border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.25) !important;
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
+            background-blend-mode: multiply;
+            background-color: rgba(0, 0, 0, 0.55);
+            border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8), inset 0 0 8px rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
