@@ -237,7 +237,7 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button'], div.button, span'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
         let targetBtn = null;
 
         if (direction === "UP") {
