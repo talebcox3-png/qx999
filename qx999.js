@@ -20,22 +20,22 @@
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
             background-blend-mode: overlay;
-            background-color: rgba(0, 0, 0, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.4) !important;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), inset 0 0 10px rgba(0, 0, 0, 0.5) !important;
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
+            background-color: rgba(0, 0, 0, 0.35);
+            border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             transition: transform 0.2s ease, box-shadow 0.3s ease;
         }
 
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px rgba(0, 255, 102, 0.7) !important;
+            box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66, 0 0 45px rgba(0, 255, 102, 0.5) !important;
             animation: pulseGlow 0.8s infinite alternate;
         }
 
         @keyframes pulseGlow {
-            from { transform: scale(1); box-shadow: 0 0 18px #00ff66, 0 0 35px #00ff66; }
-            to { transform: scale(1.06); box-shadow: 0 0 28px #00ff66, 0 0 55px #00ff66; }
+            from { transform: scale(1); box-shadow: 0 0 12px #00ff66, 0 0 25px #00ff66; }
+            to { transform: scale(1.05); box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66; }
         }
     `;
     document.head.appendChild(style);
@@ -57,7 +57,7 @@
     loginBox.innerHTML = `
         <h2 style="margin: 0 0 8px 0; color: #00ff66; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">QX999 LOGIN</h2>
         <p style="font-size: 13px; color: #b0b0b0; margin: 0 0 20px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${realSavedPass}" placeholder="••••••••" style="width: 100%; padding: 12px 15px; background: #040906; color: #00ff66; border: 1.5px solid #00e676; border-radius: 12px; box-sizing: border-box; margin-bottom: 20px; font-size: 16px; outline: none; text-align: center;">
+        <input type="text" id="qx_pass" value="${realSavedPass || licenseKey}" placeholder="••••••••" style="width: 100%; padding: 12px 15px; background: #040906; color: #00ff66; border: 1.5px solid #00e676; border-radius: 12px; box-sizing: border-box; margin-bottom: 20px; font-size: 16px; outline: none; text-align: center;">
         <button id="qx_login_btn" style="width: 100%; padding: 13px; background: #00ff66; color: #000000; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -73,11 +73,11 @@
     `;
     settingsBox.innerHTML = `
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Configuration</h3>
-        <label style="font-size:12px; color:#ccc; display:block; margin-bottom:5px;">Analysis Time (Sec):</label>
+        <label style="font-size:12px; color:#ccc; display:block; margin-bottom:5px;">Scan Time (Sec):</label>
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#040906; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
-        <label style="font-size:12px; color:#ccc; display:block; margin-bottom:5px;">Accuracy Filter:</label>
+        <label style="font-size:12px; color:#ccc; display:block; margin-bottom:5px;">Accuracy Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#040906; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="MAX">Ultra High WinRate AI</option>
+            <option value="MAX">Multi Profit AI (75-98%)</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:11px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer;">Save & Start</button>
     `;
@@ -237,7 +237,7 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button"], div.button, span'));
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button'], a, input[type="button'], div.button, span'));
         let targetBtn = null;
 
         if (direction === "UP") {
@@ -273,7 +273,7 @@
 
     document.getElementById('qx_save_btn').onclick = function () {
         let delayInput = parseInt(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput >0) {
+        if (!isNaN(delayInput) && delayInput > 0) {
             scanDurationSec = delayInput;
         }
         settingsBox.style.display = 'none';
