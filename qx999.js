@@ -26,7 +26,7 @@
             position: relative;
         }
 
-        /* Perfect Tighter Glow matching reference */
+        /* Perfect Tighter Glow matching reference image */
         #qx999-circle-bot::before {
             content: '';
             position: absolute;
@@ -206,7 +206,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
-    // Scan Canvas Setup (Ultra Smooth Scan Line)
+    // Scan Canvas Setup (Completely Free from White Flashes / Clean Green Gradient)
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -225,7 +225,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Real-Time 5s OTC Hack Analysis Algorithm
+    // Real-Time Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -261,7 +261,7 @@
         }, 20);
     }
 
-    // Ultra Smooth Scan Line Animation
+    // Ultra Smooth Scan Line Animation (Pure Green Theme)
     function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
@@ -311,7 +311,6 @@
         tradeCount++;
         let selectedSignal = "UP";
 
-        // 5s OTC Hack Logic: Guaranteed high win-rate for initial trades
         if (tradeCount <= 5) {
             if (greenForce >= redForce) {
                 selectedSignal = "UP";
