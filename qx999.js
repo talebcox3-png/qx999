@@ -20,30 +20,9 @@
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            padding: 12px;
+            padding: 8px;
             border-radius: 50%;
-            position: relative;
-        }
-
-        /* Ambient wide green glow matching the reference images during analysis (No animation) */
-        #qx999-circle-bot::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(1);
-            width: 50px; height: 50px;
-            background: radial-gradient(circle, rgba(0, 255, 102, 0.95) 0%, rgba(0, 255, 102, 0.45) 55%, transparent 80%);
-            border-radius: 50%;
-            z-index: -1;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        #qx999-circle-bot.glowing::before {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(2.6);
-            filter: blur(12px);
+            transition: filter 0.3s ease-in-out;
         }
 
         /* Skull perfectly centered, 65% dark background visibility, NO green ring */
@@ -58,13 +37,20 @@
             border: none;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45);
             pointer-events: none;
-            position: relative;
-            z-index: 2;
         }
 
-        /* Stable wide drop-shadow glow matching pictures */
+        /* Highly Vibrant, Bright and Wide Glowing Effect matching 1st & 2nd images */
         #qx999-circle-bot.glowing {
-            filter: drop-shadow(0 0 35px rgba(0, 255, 102, 1)) drop-shadow(0 0 75px rgba(0, 255, 102, 0.9));
+            animation: fullContainerGlow 1s infinite alternate ease-in-out !important;
+        }
+
+        @keyframes fullContainerGlow {
+            0% {
+                filter: drop-shadow(0 0 20px rgba(0, 255, 102, 0.9)) drop-shadow(0 0 45px rgba(0, 255, 102, 0.6));
+            }
+            100% {
+                filter: drop-shadow(0 0 35px rgba(0, 255, 102, 1)) drop-shadow(0 0 80px rgba(0, 255, 102, 0.95));
+            }
         }
 
         /* Text Styling */
@@ -72,11 +58,10 @@
             color: #ffffff !important;
             font-weight: bold;
             font-size: 13px;
-            margin-top: 6px;
+            margin-top: 4px;
             text-shadow: 0 0 4px #000000;
             font-family: Arial, sans-serif;
             pointer-events: none;
-            z-index: 2;
         }
 
         ::placeholder {
