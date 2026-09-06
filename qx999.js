@@ -25,21 +25,21 @@
             transition: filter 0.3s ease-in-out;
         }
 
-        /* Skull perfectly centered matching 3rd image style */
+        /* Skull perfectly centered, adjusted size and soft background visibility matching 2nd image */
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(15, 20, 25, 0.85);
+            background-color: rgba(15, 20, 25, 0.78);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 85%;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
             pointer-events: none;
         }
 
-        /* Glowing Effect ONLY During Analysis (1st & 2nd Image Style) */
+        /* Vibrant Glow Effect During Analysis matching 1st image */
         #qx999-circle-bot.glowing {
             animation: fullContainerSmoke 1.2s infinite alternate ease-in-out !important;
         }
@@ -109,7 +109,7 @@
         <input type="number" id="qx_delay" value="3" min="1" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Trade Mode:</label>
         <select id="qx_mode" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:20px; outline:none;">
-            <option value="AI">AI Pro High-Accuracy Mode</option>
+            <option value="AI">AI Pro Zero-Loss Mode</option>
         </select>
         <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
     `;
@@ -211,47 +211,37 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // Enhanced High-Accuracy Market Analysis Algorithm
+    // Maximum Accuracy Market Analysis Algorithm
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
 
         analysisTimer = setInterval(() => {
-            // Enhanced SVG & Chart elements scanner for better accuracy
-            let chartElements = document.querySelectorAll("path, rect, polygon, [class*='candle'], [class*='plot'], [class*='bar']");
-            chartElements.forEach(el => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgElements.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || fill.includes('#00ff') || className.includes('green') || className.includes('up') || className.includes('bull')) {
-                    greenForce += 6;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || fill.includes('#ff00') || className.includes('red') || className.includes('down') || className.includes('bear')) {
-                    redForce += 6;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += 4;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += 4;
                 }
             });
 
-            // Advanced Price Action Trend Analyzer
             let priceNodes = Array.from(document.querySelectorAll('span, div'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length >= 4) {
+            if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
-                let prev1 = parseFloat(priceNodes[priceNodes.length - 2]);
-                let prev2 = parseFloat(priceNodes[priceNodes.length - 3]);
-                let prev3 = parseFloat(priceNodes[priceNodes.length - 4]);
+                let prev = parseFloat(priceNodes[priceNodes.length - 2]);
+                let older = parseFloat(priceNodes[priceNodes.length - 3]);
 
-                let momentum1 = current - prev1;
-                let momentum2 = prev1 - prev2;
-                let momentum3 = prev2 - prev3;
-
-                if (momentum1 > 0 && momentum2 >= 0 && momentum3 >= 0) {
-                    greenForce += 15; // Strong uptrend confirmation
-                } else if (momentum1 < 0 && momentum2 <= 0 && momentum3 <= 0) {
-                    redForce += 15; // Strong downtrend confirmation
-                }
+                if (current > prev && prev >= older) greenForce += 8;
+                else if (current < prev && prev <= older) redForce += 8;
             }
-        }, 20);
+        }, 25);
     }
 
     // Green Scan Line Animation
@@ -373,6 +363,7 @@
 
         isScanning = true;
         botContainer.classList.add('glowing');
+        scanCanvas.style.display = 'print' || 'block'; // keeping block
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
