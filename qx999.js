@@ -15,48 +15,50 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Main Bot Container */
+        /* Main Container */
         #qx999-circle-bot {
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
         }
 
-        /* Adjusted Logo size & Shadow as seen on the left side of 1st Image */
+        /* 85% Visible Background & Perfect Shadow Matching Image Right Side */
         #qx999-logo-icon {
-            width: 62px; height: 62px;
-            background-color: rgba(10, 15, 20, 0.85);
+            width: 65px; height: 65px;
+            background-color: rgba(0, 0, 0, 0.85);
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: 80%;
+            background-size: 82%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.75);
-            transition: box-shadow 0.3s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
             pointer-events: none;
         }
 
-        /* Green Glowing Smoke Spread Effect (As seen in 2nd Image) - No Scale Up */
-        #qx999-logo-icon.glowing {
-            animation: softGreenSmoke 1.2s infinite alternate ease-in-out !important;
+        /* Full Container Glow extended up to 'QX999' Text (As in Image 3) */
+        #qx999-circle-bot.glowing {
+            animation: fullContainerSmoke 1.2s infinite alternate ease-in-out !important;
         }
 
-        @keyframes softGreenSmoke {
+        @keyframes fullContainerSmoke {
             0% {
-                box-shadow: 0 0 15px rgba(0, 255, 102, 0.6), 0 0 30px rgba(0, 255, 102, 0.4), 0 0 50px rgba(0, 255, 102, 0.2);
+                filter: drop-shadow(0 0 15px rgba(0, 255, 102, 0.7)) drop-shadow(0 0 30px rgba(0, 255, 102, 0.4));
             }
             100% {
-                box-shadow: 0 0 25px rgba(0, 255, 102, 0.9), 0 0 50px rgba(0, 255, 102, 0.7), 0 0 80px rgba(0, 255, 102, 0.4);
+                filter: drop-shadow(0 0 30px rgba(0, 255, 102, 1)) drop-shadow(0 0 55px rgba(0, 255, 102, 0.7));
             }
         }
 
-        /* Text stays white strictly */
+        /* Text Styling */
         #qx999-circle-bot span {
             color: #ffffff !important;
             font-weight: bold;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 13px;
+            margin-top: 4px;
             text-shadow: 0 0 4px #000000;
             font-family: Arial, sans-serif;
             pointer-events: none;
@@ -69,7 +71,7 @@
     `;
     document.head.appendChild(style);
 
-    // Storage Login Check
+    // Login Check
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
 
     // Login Box UI
@@ -113,7 +115,7 @@
     `;
     document.body.appendChild(settingsBox);
 
-    // Bot Container Creation
+    // Bot Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
     botContainer.style.display = isLoggedIn ? 'flex' : 'none';
@@ -128,7 +130,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Dragging Logic
+    // Draggable Logic
     let isDragging = false, startX, startY, initialX, initialY;
     
     function dragStart(e) {
@@ -271,11 +273,11 @@
 
         executeTrade(selectedSignal);
 
-        logoIcon.classList.remove('glowing');
+        botContainer.classList.remove('glowing');
         isScanning = false;
     }
 
-    // Fixed Single Click Trade Execution
+    // Single Click Trade Execution
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
 
@@ -299,13 +301,12 @@
             });
         }
 
-        // Single click only to prevent double trade placement
         if (targetBtn) {
             targetBtn.click();
         }
     }
 
-    // UI Click Actions
+    // Event Handlers
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
@@ -335,7 +336,7 @@
         if (isScanning) return;
 
         isScanning = true;
-        logoIcon.classList.add('glowing');
+        botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
