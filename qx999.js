@@ -159,6 +159,43 @@
 
     let scanAnimationId = null, scanY = 0, scanStartTime = 0;
 
+    function drawSkullShadow() {
+        let cx = scanCanvas.width / 2;
+        let cy = scanCanvas.height / 2;
+        let size = Math.min(scanCanvas.width, scanCanvas.height) * 0.35;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+        ctx.shadowColor = "rgba(0, 255, 136, 0.25)";
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy - size * 0.1, size * 0.45, Math.PI, 0, false);
+        ctx.lineTo(cx + size * 0.28, cy + size * 0.28);
+        ctx.lineTo(cx - size * 0.28, cy + size * 0.28);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.ellipse(cx - size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(cx + size * 0.17, cy - size * 0.05, size * 0.12, size * 0.16, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + size * 0.06);
+        ctx.lineTo(cx - size * 0.05, cy + size * 0.16);
+        ctx.lineTo(cx + size * 0.05, cy + size * 0.16);
+        ctx.closePath();
+        ctx.fill();
+
+        for (let i = -2; i <= 2; i++) {
+            ctx.fillRect(cx + (i * size * 0.08) - (size * 0.02), cy + size * 0.22, size * 0.035, size * 0.08);
+        }
+
+        ctx.restore();
+    }
+
     function drawScanLine() {
         let elapsedSec = (Date.now() - scanStartTime) / 1000;
 
@@ -169,6 +206,8 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
+        
+        drawSkullShadow();
 
         let grad = ctx.createLinearGradient(0, scanY - 180, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 136, 0)');
