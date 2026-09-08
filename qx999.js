@@ -26,14 +26,14 @@
         }
         #qx999-logo-icon {
             width: 70px; height: 70px;
-            background-color: rgba(12, 21, 14, 0.35);
+            background-color: rgba(0, 0, 0, 0.75);
             background-image: url('${logoUrl}');
-            background-position: 56% center;
-            background-size: 88%;
+            background-position: 58% center;
+            background-size: 98%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
@@ -47,8 +47,8 @@
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing span {
-            color: #00ff66 !important;
-            text-shadow: 0 0 12px #00ff66, 0 0 20px #00ff66;
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
         ::placeholder { color: #777777; }
         
@@ -66,6 +66,7 @@
     document.head.appendChild(style);
 
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
+    let hasSavedPass = localStorage.getItem("qx999_saved_pass") === "true";
 
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
@@ -79,7 +80,7 @@
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <input type="password" id="qx_pass" value="${hasSavedPass ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -211,7 +212,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = (selectedTradeMode === "5s trade") ? 35 : 20;
+                let weight = 25;
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
@@ -227,7 +228,7 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = (selectedTradeMode === "5s trade") ? 50 : 30;
+                let multiplier = 40;
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
@@ -274,13 +275,12 @@
 
         if (elapsedSec >= (scanDurationSec - 0.8) && !tradeExecuted) {
             tradeExecuted = true;
-            if (selectedTradeMode === "5s trade") {
-                if (greenForce === redForce) greenForce += 25; 
-            }
-            if (greenForce >= redForce) {
+            if (greenForce > redForce) {
                 selectedSignal = "UP";
-            } else {
+            } else if (redForce > greenForce) {
                 selectedSignal = "DOWN";
+            } else {
+                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
             }
             executeTrade(selectedSignal);
         }
@@ -326,6 +326,7 @@
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
+            localStorage.setItem("qx999_saved_pass", "true");
             loginBox.remove();
             botContainer.style.display = 'flex';
         }
