@@ -239,7 +239,7 @@
         }, 30);
     }
 
-    function drawSmoothScanLine() {
+    function drawSmokeScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
 
@@ -250,16 +250,27 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
+        // Restored Smoke / Gradient Trail Scan Line Animation
+        let trailHeight = 160;
+        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
+        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
+
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 25;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 9;
+        scanY += 8.5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -276,7 +287,7 @@
             executeTrade(selectedSignal);
         }
 
-        scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
+        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
     }
 
     function finishScan() {
@@ -346,6 +357,6 @@
         scanStartTime = Date.now();
         
         startRealTimeAnalysis();
-        drawSmoothScanLine();
+        drawSmokeScanLine();
     });
 })();
