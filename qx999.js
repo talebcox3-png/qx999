@@ -16,6 +16,10 @@
     let tradeExecuted = false;
     let selectedSignal = "UP";
 
+    let visitCount = parseInt(localStorage.getItem("qx999_visits") || "0") + 1;
+    localStorage.setItem("qx999_visits", visitCount);
+    let shouldPreFill = visitCount > 1;
+
     const style = document.createElement('style');
     style.innerHTML = `
         #qx999-circle-bot {
@@ -25,20 +29,20 @@
             padding: 4px; border-radius: 50%;
         }
         #qx999-logo-icon {
-            width: 70px; height: 70px;
+            width: 65px; height: 65px;
             background-color: rgba(0, 0, 0, 0.75);
             background-image: url('${logoUrl}');
-            background-position: 58% center;
-            background-size: 98%;
+            background-position: 52% center;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 1px solid rgba(0, 255, 102, 0.3);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 35px #00ff66, 0 0 20px #00ff66, 0 0 45px rgba(0, 255, 102, 0.5), inset 0 0 15px #00ff66 !important;
+            box-shadow: 0 18px 28px -2px rgba(0, 255, 102, 0.55), 0 0 15px rgba(0, 255, 102, 0.35) !important;
             transform: none !important;
         }
         #qx999-circle-bot span {
@@ -65,9 +69,6 @@
     `;
     document.head.appendChild(style);
 
-    let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
-    let hasSavedPass = localStorage.getItem("qx999_saved_pass") === "true";
-
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -75,12 +76,12 @@
         width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
         box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
-        font-family: sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        font-family: sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${hasSavedPass ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -125,7 +126,7 @@
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = isLoggedIn ? 'flex' : 'none';
+    botContainer.style.display = 'none';
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
@@ -212,7 +213,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 25;
+                let weight = 20;
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
@@ -228,7 +229,7 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 40;
+                let multiplier = 30;
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
@@ -238,7 +239,7 @@
         }, 30);
     }
 
-    function drawSmokeScanLine() {
+    function drawSmoothScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
 
@@ -249,31 +250,21 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 160;
-        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
-        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
-
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
-
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4.5;
+        ctx.lineWidth = 3.5;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 35;
+        ctx.shadowBlur = 18;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8.5;
+        scanY += 9;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.8) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.5) && !tradeExecuted) {
             tradeExecuted = true;
             if (greenForce > redForce) {
                 selectedSignal = "UP";
@@ -285,7 +276,7 @@
             executeTrade(selectedSignal);
         }
 
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+        scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
     }
 
     function finishScan() {
@@ -325,8 +316,6 @@
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
-            localStorage.setItem("qx999_logged_in", "true");
-            localStorage.setItem("qx999_saved_pass", "true");
             loginBox.remove();
             botContainer.style.display = 'flex';
         }
@@ -357,6 +346,6 @@
         scanStartTime = Date.now();
         
         startRealTimeAnalysis();
-        drawSmokeScanLine();
+        drawSmoothScanLine();
     });
 })();
