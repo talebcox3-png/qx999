@@ -6,7 +6,8 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
-    let scanDurationSec = 3; 
+    let scanDurationSec = 5; 
+    let selectedTradeMode = "5s trade"; 
     let isConfigured = false; 
 
     let greenForce = 0;
@@ -24,27 +25,43 @@
             padding: 4px; border-radius: 50%;
         }
         #qx999-logo-icon {
-            width: 65px; height: 65px;
-            background-color: rgba(12, 21, 14, 0.75);
+            width: 70px; height: 70px;
+            background-color: rgba(12, 21, 14, 0.35);
             background-image: url('${logoUrl}');
-            background-position: center center;
-            background-size: 82%;
+            background-position: 56% center;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.2);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        #qx999-logo-icon.glowing {
-            box-shadow: 0 0 30px #00ff66, 0 0 15px #00ff66, inset 0 0 15px #00ff66 !important;
-            transform: scale(1.08);
+        #qx999-circle-bot.glowing #qx999-logo-icon {
+            box-shadow: 0 0 35px #00ff66, 0 0 20px #00ff66, 0 0 45px rgba(0, 255, 102, 0.5), inset 0 0 15px #00ff66 !important;
+            transform: none !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
-            margin-top: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
+            transition: all 0.3s ease-in-out;
+        }
+        #qx999-circle-bot.glowing span {
+            color: #00ff66 !important;
+            text-shadow: 0 0 12px #00ff66, 0 0 20px #00ff66;
         }
         ::placeholder { color: #777777; }
+        
+        .qx-mode-btn {
+            width: 100%; padding: 12px; background: #070d09; color: #fff;
+            border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
+            font-size: 15px; cursor: pointer; margin-bottom: 8px; text-align: center;
+            transition: all 0.2s;
+        }
+        .qx-mode-btn.active {
+            background: #00ff66; color: #000; border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0,255,102,0.4);
+        }
     `;
     document.head.appendChild(style);
 
@@ -71,18 +88,39 @@
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 310px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 22px; border-radius: 20px;
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 24px; border-radius: 24px;
         box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
-        font-family: Arial, sans-serif; display: none;
+        font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center;">Bot Settings</h3>
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan Duration (Sec):</label>
-        <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:10px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:8px; box-sizing:border-box; margin-bottom:15px; outline:none;">
-        <button id="qx_save_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:10px; font-weight:bold; font-size:15px; cursor:pointer;">Save & Start</button>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
+        <input type="number" id="qx_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
+        <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
+        <div id="qx_mode_10s" class="qx-mode-btn">10s trade</div>
+        <div id="qx_mode_5s" class="qx-mode-btn active">5s trade</div>
+        
+        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save</button>
     `;
     document.body.appendChild(settingsBox);
+
+    let modeBtns = ['1m trade', '10s trade', '5s trade'];
+    modeBtns.forEach(m => {
+        let btnId = m === '1m trade' ? 'qx_mode_1m' : (m === '10s trade' ? 'qx_mode_10s' : 'qx_mode_5s');
+        document.getElementById(btnId).onclick = function () {
+            document.querySelectorAll('.qx-mode-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedTradeMode = m;
+            if (m === '5s trade') scanDurationSec = 3;
+            else if (m === '10s trade') scanDurationSec = 4;
+            else scanDurationSec = 5;
+            document.getElementById('qx_delay').value = scanDurationSec;
+        };
+    });
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
@@ -173,10 +211,12 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
+                let weight = (selectedTradeMode === "5s trade") ? 35 : 20;
+
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 15;
+                    greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 15;
+                    redForce += weight;
                 }
             });
 
@@ -187,13 +227,14 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
+                let multiplier = (selectedTradeMode === "5s trade") ? 50 : 30;
                 if (current > prev) {
-                    greenForce += 25;
+                    greenForce += multiplier;
                 } else if (current < prev) {
-                    redForce += 25;
+                    redForce += multiplier;
                 }
             }
-        }, 50);
+        }, 30);
     }
 
     function drawSmokeScanLine() {
@@ -207,32 +248,35 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 140;
+        let trailHeight = 160;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4.5;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 35;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 5.2;
+        scanY += 8.5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 1) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.8) && !tradeExecuted) {
             tradeExecuted = true;
+            if (selectedTradeMode === "5s trade") {
+                if (greenForce === redForce) greenForce += 25; 
+            }
             if (greenForce >= redForce) {
                 selectedSignal = "UP";
             } else {
@@ -251,7 +295,7 @@
             cancelAnimationFrame(scanAnimationId);
             scanAnimationId = null;
         }
-        logoIcon.classList.remove('glowing');
+        botContainer.classList.remove('glowing');
         isScanning = false;
     }
 
@@ -306,7 +350,7 @@
 
         isScanning = true;
         tradeExecuted = false;
-        logoIcon.classList.add('glowing');
+        botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
         scanY = 0;
         scanStartTime = Date.now();
