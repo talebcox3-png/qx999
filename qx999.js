@@ -27,31 +27,27 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.75);
+            background-color: rgba(0, 0, 0, 0.85);
             background-image: url('${logoUrl}');
             background-position: 52% center;
             background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ff66;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 18px 28px -2px rgba(0, 255, 102, 0.55), 0 0 15px rgba(0, 255, 102, 0.35) !important;
-            transform: none !important;
+            border-color: #00ff66;
+            box-shadow: 0 0 25px #00ff66, 0 0 50px #00ff66, inset 0 0 15px #00ff66 !important;
+            transform: scale(1.05);
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
-            transition: all 0.3s ease-in-out;
         }
-        #qx999-circle-bot.glowing span {
-            color: #ffffff !important;
-            text-shadow: 0 0 10px rgba(255,255,255,0.8);
-        }
-        ::placeholder { color: #777777; }
+        ::placeholder { color: #555555; }
         
         .qx-dir-btn {
             width: 100%; padding: 12px; background: #070d09; color: #fff;
@@ -70,16 +66,16 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        width: 320px; background: #0e1710; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 30px 24px; border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,255,102,0.25); z-index: 999999;
         font-family: sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
+        <h3 style="margin:0 0 8px 0; color:#00ff66; font-size:22px; font-weight:600;">QX999 Login</h3>
+        <p style="font-size:13px; color:#aaaaaa; margin:0 0 22px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:2px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; text-align:center; box-shadow: 0 0 15px rgba(0,255,102,0.4);">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 4px 12px rgba(0,255,102,0.3);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -87,28 +83,28 @@
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        width: 320px; background: #0e1710; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 24px; border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,255,102,0.25); z-index: 999999;
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
+        <label style="font-size:13px; color:#bbb; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
         <input type="number" id="qx_delay" value="5" min="1" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">After trade scan (seconds)</label>
-        <div style="font-size:11px; color:#888; margin-bottom:5px;">0 = stop only when you tap the icon</div>
+        <label style="font-size:13px; color:#bbb; display:block; margin-bottom:5px;">After trade scan (seconds)</label>
+        <div style="font-size:11px; color:#777; margin-bottom:5px;">0 = stop only when you tap the icon</div>
         <input type="number" id="qx_after_delay" value="5" min="0" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
+        <label style="font-size:13px; color:#bbb; display:block; margin-bottom:8px;">Trade direction</label>
         <div id="qx_dir_up" class="qx-dir-btn">Up</div>
         <div id="qx_dir_down" class="qx-dir-btn">Down</div>
         <div id="qx_dir_random" class="qx-dir-btn active">Random</div>
         
         <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save</button>
-        <div style="font-size:11px; color:#888; text-align:center; margin-top:12px;">3 taps on icon to open · tap outside to close</div>
+        <div style="font-size:11px; color:#777; text-align:center; margin-top:12px;">3 taps on icon to open · tap outside to close</div>
     `;
     document.body.appendChild(settingsBox);
 
@@ -225,12 +221,12 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 160;
+        let trailHeight = 180;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.85)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
@@ -239,12 +235,12 @@
         ctx.strokeStyle = '#00ff66';
         ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 30;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
+        scanY += 12;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -265,24 +261,24 @@
     function executeTrade() {
         let direction = selectedDirection;
         if (direction === "Random") {
-            direction = Math.random() > 0.5 ? "Up" : "Down";
+            direction = Math.random() >= 0.5 ? "Up" : "Down";
         }
 
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allButtons = Array.from(document.querySelectorAll('button'));
         let targetBtn = null;
 
         if (direction === "Up") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || text.includes("কল") || cls.includes("green") || cls.includes("call");
-            });
+            targetBtn = allButtons.find(b => {
+                let txt = (b.innerText || b.textContent || "").trim().toLowerCase();
+                let cls = (b.className || "").toString().toLowerCase();
+                return txt.includes("up") || cls.includes("success") || cls.includes("call") || cls.includes("_up");
+            }) || allButtons[0];
         } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
-            });
+            targetBtn = allButtons.find(b => {
+                let txt = (b.innerText || b.textContent || "").trim().toLowerCase();
+                let cls = (b.className || "").toString().toLowerCase();
+                return txt.includes("down") || cls.includes("danger") || cls.includes("put") || cls.includes("_down");
+            }) || allButtons[1];
         }
 
         if (targetBtn) {
