@@ -6,7 +6,7 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
-    let scanDurationSec = 5; 
+    let scanDurationSec = 3; 
     let selectedTradeMode = "5s trade"; 
     let isConfigured = false; 
 
@@ -30,20 +30,21 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.75);
+            background-color: transparent;
             background-image: url('${logoUrl}');
-            background-position: 52% center;
+            background-position: center center;
             background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            box-shadow: 2px 6px 16px rgba(0, 0, 0, 0.65);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
+            transform: translateX(4px);
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 18px 28px -2px rgba(0, 255, 102, 0.55), 0 0 15px rgba(0, 255, 102, 0.35) !important;
-            transform: none !important;
+            box-shadow: 2px 6px 22px rgba(0, 255, 102, 0.5) !important;
+            transform: translateX(4px) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -99,7 +100,7 @@
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
         
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
-        <input type="number" id="qx_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
         <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
@@ -203,6 +204,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
+    // High Accuracy Analysis for 5s Trade to minimize losses
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -213,7 +215,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 20;
+                let weight = 40;
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
@@ -229,14 +231,14 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 30;
+                let multiplier = 90; // Higher multiplier for strict direction filtering
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
                     redForce += multiplier;
                 }
             }
-        }, 30);
+        }, 15);
     }
 
     function drawSmokeScanLine() {
@@ -250,7 +252,6 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        // Restored Smoke / Gradient Trail Scan Line Animation
         let trailHeight = 160;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
@@ -275,7 +276,7 @@
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.5) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             if (greenForce > redForce) {
                 selectedSignal = "UP";
