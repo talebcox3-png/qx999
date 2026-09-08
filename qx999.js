@@ -6,8 +6,9 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
-    let scanDurationSec = 3; 
-    let selectedTradeMode = "5s trade"; 
+    let scanDurationSec = 5; 
+    let afterTradeScanSec = 5;
+    let configuredTradeDirection = "Random"; // "Up", "Down", "Random"
     let isConfigured = false; 
 
     let greenForce = 0;
@@ -37,39 +38,35 @@
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 2px 6px 16px rgba(0, 0, 0, 0.65);
+            box-shadow: 2px 6px 16px rgba(0, 0, 0, 0.85); /* হালকা কালো শ্যাডো */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
             transform: translateX(4px);
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 2px 6px 22px rgba(0, 255, 102, 0.5) !important;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.7) !important;
             transform: translateX(4px) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
-            transition: all 0.3s ease-in-out;
-        }
-        #qx999-circle-bot.glowing span {
-            color: #ffffff !important;
-            text-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
         ::placeholder { color: #777777; }
         
-        .qx-mode-btn {
+        .qx-dir-btn {
             width: 100%; padding: 12px; background: #070d09; color: #fff;
             border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
             font-size: 15px; cursor: pointer; margin-bottom: 8px; text-align: center;
             transition: all 0.2s;
         }
-        .qx-mode-btn.active {
+        .qx-dir-btn.active {
             background: #00ff66; color: #000; border-color: #00ff66;
             box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
     `;
     document.head.appendChild(style);
 
+    // Login Box (ஹুবহু ১ম ছবির মতো)
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -82,11 +79,12 @@
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
+    // Settings Box (হুবহু ২য় ছবির মতো)
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -100,28 +98,29 @@
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
         
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
-        <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <input type="number" id="qx_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:12px; outline:none; font-size:16px;">
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
-        <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
-        <div id="qx_mode_10s" class="qx-mode-btn">10s trade</div>
-        <div id="qx_mode_5s" class="qx-mode-btn active">5s trade</div>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:2px;">After trade scan (seconds)</label>
+        <span style="font-size:11px; color:#777; display:block; margin-bottom:5px;">0 = stop only when you tap the icon</span>
+        <input type="number" id="qx_after_delay" value="5" min="0" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
+        <div id="qx_dir_up" class="qx-dir-btn">Up</div>
+        <div id="qx_dir_down" class="qx-dir-btn">Down</div>
+        <div id="qx_dir_random" class="qx-dir-btn active">Random</div>
         
         <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save</button>
+        <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">3 taps on icon to open · tap outside to close</p>
     `;
     document.body.appendChild(settingsBox);
 
-    let modeBtns = ['1m trade', '10s trade', '5s trade'];
-    modeBtns.forEach(m => {
-        let btnId = m === '1m trade' ? 'qx_mode_1m' : (m === '10s trade' ? 'qx_mode_10s' : 'qx_mode_5s');
+    // Direction buttons logic
+    ['Up', 'Down', 'Random'].forEach(dir => {
+        let btnId = dir === 'Up' ? 'qx_dir_up' : (dir === 'Down' ? 'qx_dir_down' : 'qx_dir_random');
         document.getElementById(btnId).onclick = function () {
-            document.querySelectorAll('.qx-mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.qx-dir-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            selectedTradeMode = m;
-            if (m === '5s trade') scanDurationSec = 3;
-            else if (m === '10s trade') scanDurationSec = 4;
-            else scanDurationSec = 5;
-            document.getElementById('qx_delay').value = scanDurationSec;
+            configuredTradeDirection = dir;
         };
     });
 
@@ -138,6 +137,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
+    // Dragging logic
     let isDragging = false, hasMoved = false;
     let startX = 0, startY = 0, initialX = 0, initialY = 0;
 
@@ -186,6 +186,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
+    // Scan Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -204,7 +205,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
-    // High Accuracy Analysis for 5s Trade to minimize losses
+    // Advanced Market Analysis to evaluate both UP and DOWN accurately and reduce loss
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -215,8 +216,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 40;
-
+                let weight = 30;
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
@@ -231,14 +231,14 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 90; // Higher multiplier for strict direction filtering
+                let multiplier = 75;
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
                     redForce += multiplier;
                 }
             }
-        }, 15);
+        }, 20);
     }
 
     function drawSmokeScanLine() {
@@ -278,12 +278,20 @@
 
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
-            if (greenForce > redForce) {
+            
+            if (configuredTradeDirection === "Up") {
                 selectedSignal = "UP";
-            } else if (redForce > greenForce) {
+            } else if (configuredTradeDirection === "Down") {
                 selectedSignal = "DOWN";
             } else {
-                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                // Random or Smart Analysis
+                if (greenForce > redForce) {
+                    selectedSignal = "UP";
+                } else if (redForce > greenForce) {
+                    selectedSignal = "DOWN";
+                } else {
+                    selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                }
             }
             executeTrade(selectedSignal);
         }
@@ -334,30 +342,51 @@
     };
 
     document.getElementById('qx_save_btn').onclick = function () {
-        let delayInput = parseFloat(document.getElementById('qx_delay').value);
-        if (!isNaN(delayInput) && delayInput >= 2) {
-            scanDurationSec = delayInput;
-        }
+        let scanInput = parseFloat(document.getElementById('qx_scan_delay').value);
+        let afterInput = parseFloat(document.getElementById('qx_after_delay').value);
+        if (!isNaN(scanInput) && scanInput >= 2) scanDurationSec = scanInput;
+        if (!isNaN(afterInput) && afterInput >= 0) afterTradeScanSec = afterInput;
+
         settingsBox.style.display = 'none';
         isConfigured = true;
     };
 
+    // Tap outside to close settings box
+    window.addEventListener('click', function(e) {
+        if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !botContainer.contains(e.target)) {
+            settingsBox.style.display = 'none';
+        }
+    });
+
+    // 3 taps on icon to open settings (as mentioned in settings footer)
+    let tapCount = 0, tapTimer = null;
     botContainer.addEventListener('click', function (e) {
         if (hasMoved || isDragging) return;
-        if (!isConfigured) {
-            settingsBox.style.display = 'block';
-            return;
-        }
-        if (isScanning) return;
 
-        isScanning = true;
-        tradeExecuted = false;
-        botContainer.classList.add('glowing');
-        scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
-        
-        startRealTimeAnalysis();
-        drawSmokeScanLine();
+        tapCount++;
+        if (tapTimer) clearTimeout(tapTimer);
+
+        tapTimer = setTimeout(() => {
+            if (tapCount >= 3) {
+                settingsBox.style.display = 'block';
+            } else {
+                if (!isConfigured) {
+                    settingsBox.style.display = 'block';
+                    return;
+                }
+                if (isScanning) return;
+
+                isScanning = true;
+                tradeExecuted = false;
+                botContainer.classList.add('glowing');
+                scanCanvas.style.display = 'block';
+                scanY = 0;
+                scanStartTime = Date.now();
+                
+                startRealTimeAnalysis();
+                drawSmokeScanLine();
+            }
+            tapCount = 0;
+        }, 350);
     });
 })();
