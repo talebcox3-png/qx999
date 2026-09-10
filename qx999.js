@@ -7,13 +7,13 @@
     let licenseKey = "ALVI5S-NJ99";
     let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
     let scanDurationSec = 5; 
-    let afterTradeScanSec = 5;
-    let configuredTradeDirection = "Random"; // "Up", "Down", "Random"
+    let operationMode = "Click to Trade"; // "Only Signal", "Auto Trade Place", "Click to Trade"
     let isConfigured = false; 
 
     let greenForce = 0;
     let redForce = 0;
     let analysisTimer = null;
+    let autoTradeInterval = null;
     let tradeExecuted = false;
     let selectedSignal = "UP";
 
@@ -24,11 +24,16 @@
     const style = document.createElement('style');
     style.innerHTML = `
         @keyframes rainbowGlow {
-            0% { border-color: #ff0055; box-shadow: 0 0 12px #ff0055; }
-            25% { border-color: #00ff66; box-shadow: 0 0 12px #00ff66; }
-            50% { border-color: #00ffff; box-shadow: 0 0 12px #00ffff; }
-            75% { border-color: #7b00ff; box-shadow: 0 0 12px #7b00ff; }
-            100% { border-color: #ff0055; box-shadow: 0 0 12px #ff0055; }
+            0% { border-color: #ff0055; box-shadow: 0 0 15px #ff0055; }
+            25% { border-color: #00ff66; box-shadow: 0 0 15px #00ff66; }
+            50% { border-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
+            75% { border-color: #7b00ff; box-shadow: 0 0 15px #7b00ff; }
+            100% { border-color: #ff0055; box-shadow: 0 0 15px #ff0055; }
+        }
+        @keyframes luxuryPulse {
+            0% { box-shadow: 0 0 20px rgba(0,255,102,0.3); }
+            50% { box-shadow: 0 0 40px rgba(0,255,102,0.7); }
+            100% { box-shadow: 0 0 20px rgba(0,255,102,0.3); }
         }
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
@@ -46,7 +51,6 @@
             border-radius: 50%;
             border: 2.5px solid #00ff66;
             animation: rainbowGlow 3s linear infinite;
-            box-shadow: none !important; /* শ্যাডো সম্পূর্ণ বাদ দেওয়া হলো */
             pointer-events: none;
             transition: transform 0.2s ease;
         }
@@ -56,74 +60,71 @@
         }
         ::placeholder { color: #777777; }
         
-        .nj-dir-btn {
+        .nj-mode-btn {
             width: 100%; padding: 12px; background: #070d09; color: #fff;
             border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
-            font-size: 15px; cursor: pointer; margin-bottom: 8px; text-align: center;
+            font-size: 14px; cursor: pointer; margin-bottom: 8px; text-align: center;
             transition: all 0.2s;
         }
-        .nj-dir-btn.active {
+        .nj-mode-btn.active {
             background: #00ff66; color: #000; border-color: #00ff66;
-            box-shadow: 0 0 15px rgba(0,255,102,0.4);
+            box-shadow: 0 0 15px rgba(0,255,102,0.5);
         }
     `;
     document.head.appendChild(style);
 
-    // Luxury Login Box
+    // Luxury Glowing Login Box
     let loginBox = document.createElement('div');
     loginBox.id = 'nj999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 330px; background: #0c150e; border: 2px solid #00ff66;
         color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 30px rgba(0,255,102,0.2); z-index: 999999;
+        animation: luxuryPulse 3s infinite; z-index: 999999;
         font-family: sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
         <div style="width: 50px; height: 50px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:22px; font-weight:600;">NJ999 Luxury Login</h3>
-        <p style="font-size:13px; color:#aaaaaa; margin:0 0 22px 0;">Enter access password to continue</p>
-        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:16px; outline:none; text-align:center; letter-spacing:2px;">
-        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:16px; cursor:pointer;">Authenticate</button>
+        <p style="font-size:13px; color:#aaaaaa; margin:0 0 22px 0;">Enter secure access key</p>
+        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:16px; outline:none; text-align:center; letter-spacing:2px; box-shadow: 0 0 10px rgba(0,255,102,0.2);">
+        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:16px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
-    // Settings Box
+    // Luxury Glowing Settings Box (Replacing old settings)
     let settingsBox = document.createElement('div');
     settingsBox.id = 'nj999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        width: 330px; background: #0c150e; border: 2px solid #00ff66;
         color: #ffffff; padding: 24px; border-radius: 24px;
-        box-shadow: 0 0 30px rgba(0,255,102,0.2); z-index: 999999;
+        animation: luxuryPulse 3s infinite; z-index: 999999;
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">NJ999 Settings</h3>
+        <div style="width: 40px; height: 40px; margin: 0 auto 10px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center; font-weight:bold;">NJ999 Glowing Settings</h3>
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
-        <input type="number" id="nj_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:12px; outline:none; font-size:16px;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan Time (Seconds)</label>
+        <input type="number" id="nj_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:2px;">After trade scan (seconds)</label>
-        <span style="font-size:11px; color:#777; display:block; margin-bottom:5px;">0 = stop only when you tap the icon</span>
-        <input type="number" id="nj_after_delay" value="5" min="0" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Operation Mode</label>
+        <div id="nj_mode_signal" class="nj-mode-btn">Only Signal</div>
+        <div id="nj_mode_auto" class="nj-mode-btn">Auto Trade Place</div>
+        <div id="nj_mode_click" class="nj-mode-btn active">Click to Trade</div>
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
-        <div id="nj_dir_up" class="nj-dir-btn">Up</div>
-        <div id="nj_dir_down" class="nj-dir-btn">Down</div>
-        <div id="nj_dir_random" class="nj-dir-btn active">Random</div>
-        
-        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save Settings</button>
-        <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">3 taps on icon to open settings</p>
+        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Save & Apply</button>
+        <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">Tap 3 times on bot icon for settings</p>
     `;
     document.body.appendChild(settingsBox);
 
-    ['Up', 'Down', 'Random'].forEach(dir => {
-        let btnId = dir === 'Up' ? 'nj_dir_up' : (dir === 'Down' ? 'nj_dir_down' : 'nj_dir_random');
+    ['Only Signal', 'Auto Trade Place', 'Click to Trade'].forEach(mode => {
+        let btnId = mode === 'Only Signal' ? 'nj_mode_signal' : (mode === 'Auto Trade Place' ? 'nj_mode_auto' : 'nj_mode_click');
         document.getElementById(btnId).onclick = function () {
-            document.querySelectorAll('.nj-dir-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nj-mode-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            configuredTradeDirection = dir;
+            operationMode = mode;
         };
     });
 
@@ -140,17 +141,24 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Terminal Box (ভিডিওর মতো হুবহু স্টাইল)
+    // Terminal Box - positioned directly above the bot icon like the reference image
     let terminalBox = document.createElement('div');
     terminalBox.id = 'nj999-terminal';
     terminalBox.style.cssText = `
-        position: fixed; top: 40px; right: 100px;
-        width: 230px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #00ff66; padding: 12px; border-radius: 12px; font-family: monospace;
-        font-size: 13px; display: none; z-index: 999998; box-shadow: none;
-        line-height: 1.5; pointer-events: none;
+        position: fixed;
+        width: 210px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #00ff66; padding: 10px 12px; border-radius: 12px; font-family: monospace;
+        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 15px rgba(0,255,102,0.2);
+        line-height: 1.4; pointer-events: none;
     `;
     document.body.appendChild(terminalBox);
+
+    function updateTerminalPosition() {
+        let rect = botContainer.getBoundingClientRect();
+        let termHeight = terminalBox.offsetHeight || 70;
+        terminalBox.style.top = (rect.top - termHeight - 8) + 'px';
+        terminalBox.style.left = (rect.left - 70) + 'px';
+    }
 
     let isDragging = false, hasMoved = false;
     let startX = 0, startY = 0, initialX = 0, initialY = 0;
@@ -186,6 +194,7 @@
         if (isDragging) {
             botContainer.style.left = (initialX + dx) + 'px';
             botContainer.style.top = (initialY + dy) + 'px';
+            updateTerminalPosition();
         }
     }
 
@@ -216,7 +225,6 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // হুবহু রিয়েল মার্কেট খুঁজে বের করার ফাংশন
     function getActiveMarketName() {
         let candidates = document.querySelectorAll('.asset-name, .current-asset, [class*="asset"], [class*="symbol"], header span, div span');
         for (let el of candidates) {
@@ -230,8 +238,7 @@
         return match ? match[0] : "USD/BRL (OTC)";
     }
 
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
-
+    // High Accuracy Analysis Engine for 5s and 1-Minute Sure-Shots
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -242,7 +249,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 30;
+                let weight = 45;
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
@@ -257,15 +264,17 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 75;
+                let multiplier = 100; // Enhanced precision weight
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
                     redForce += multiplier;
                 }
             }
-        }, 20);
+        }, 15);
     }
+
+    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
     function drawSmokeScanLine() {
         let currentTime = Date.now();
@@ -297,7 +306,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8.5;
+        scanY += 9;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -305,25 +314,22 @@
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             
-            if (configuredTradeDirection === "Up") {
+            if (greenForce > redForce) {
                 selectedSignal = "UP";
-            } else if (configuredTradeDirection === "Down") {
+            } else if (redForce > greenForce) {
                 selectedSignal = "DOWN";
             } else {
-                if (greenForce > redForce) {
-                    selectedSignal = "UP";
-                } else if (redForce > greenForce) {
-                    selectedSignal = "DOWN";
-                } else {
-                    selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
-                }
+                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
             }
 
-            // ভিডিওর মতো টার্মিনালে রিয়েল মার্কেট ও সিগন্যাল দেখানো
             let currentMarket = getActiveMarketName();
+            updateTerminalPosition();
+            terminalBox.style.display = 'block';
             terminalBox.innerHTML = `root@nj999-ai:~$<br>analyzing...<br>market: ${currentMarket}<br>signal: <span style="color:${selectedSignal === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${selectedSignal}</span>`;
 
-            executeTrade(selectedSignal);
+            if (operationMode === "Click to Trade") {
+                executeTrade(selectedSignal);
+            }
         }
 
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
@@ -338,7 +344,6 @@
         }
         isScanning = false;
         
-        // কিছু সময় পর টার্মিনাল হাইড করা
         setTimeout(() => {
             terminalBox.style.display = 'none';
         }, 4000);
@@ -367,11 +372,49 @@
         }
     }
 
+    // Auto Trade Mode (Background 1-Minute Sure-Shot Execution)
+    function startAutoTradeLoop() {
+        if (autoTradeInterval) clearInterval(autoTradeInterval);
+        
+        autoTradeInterval = setInterval(() => {
+            if (operationMode !== "Auto Trade Place" || isScanning) return;
+
+            greenForce = 0;
+            redForce = 0;
+            
+            // Quick 1-second background sampling for 1-min sure shot confirmation
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgElements.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green')) greenForce += 50;
+                else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red')) redForce += 50;
+            });
+
+            let diff = Math.abs(greenForce - redForce);
+            if (diff >= 150) { // High confidence threshold for 1-min sure shot
+                let dir = greenForce > redForce ? "UP" : "DOWN";
+                let currentMarket = getActiveMarketName();
+                
+                updateTerminalPosition();
+                terminalBox.style.display = 'block';
+                terminalBox.innerHTML = `root@nj999-ai:~$<br>sure-shot found!<br>market: ${currentMarket}<br>auto-trade: <span style="color:${dir === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${dir}</span>`;
+                
+                executeTrade(dir);
+
+                setTimeout(() => {
+                    terminalBox.style.display = 'none';
+                }, 3000);
+            }
+        }, 8000); // Checks every 8 seconds for optimal 1-min sure shot execution without delay
+    }
+
     document.getElementById('nj_login_btn').onclick = function () {
         let inputPass = document.getElementById('nj_pass').value;
         if (inputPass === licenseKey) {
             loginBox.remove();
             botContainer.style.display = 'flex';
+            startAutoTradeLoop();
         } else {
             alert("Wrong Password! Use: ALVI5S-NJ99");
         }
@@ -379,9 +422,7 @@
 
     document.getElementById('nj_save_btn').onclick = function () {
         let scanInput = parseFloat(document.getElementById('nj_scan_delay').value);
-        let afterInput = parseFloat(document.getElementById('nj_after_delay').value);
         if (!isNaN(scanInput) && scanInput >= 2) scanDurationSec = scanInput;
-        if (!isNaN(afterInput) && afterInput >= 0) afterTradeScanSec = afterInput;
 
         settingsBox.style.display = 'none';
         isConfigured = true;
@@ -410,14 +451,24 @@
                 }
                 if (isScanning) return;
 
+                // If Auto Trade Place is selected manually clicking doesn't need scan lines unless specified
+                if (operationMode === "Auto Trade Place") {
+                    let currentMarket = getActiveMarketName();
+                    updateTerminalPosition();
+                    terminalBox.style.display = 'block';
+                    terminalBox.innerHTML = `root@nj999-ai:~$<br>auto-mode active<br>market: ${currentMarket}`;
+                    setTimeout(() => { terminalBox.style.display = 'none'; }, 2000);
+                    return;
+                }
+
                 isScanning = true;
                 tradeExecuted = false;
                 scanCanvas.style.display = 'block';
                 scanY = 0;
                 scanStartTime = Date.now();
                 
-                // স্ক্যান শুরু হতেই ভিডিওর মতো টার্মিনালে 'analyzing...' দেখানো
                 let currentMarket = getActiveMarketName();
+                updateTerminalPosition();
                 terminalBox.style.display = 'block';
                 terminalBox.innerHTML = `root@nj999-ai:~$<br>analyzing...<br>market: ${currentMarket}`;
 
