@@ -7,7 +7,7 @@
     let licenseKey = "ALVI5S-NJ99";
     let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
     let scanDurationSec = 5; 
-    let operationMode = "Click to Trade"; // "Only Signal", "Auto Trade Place", "Click to Trade"
+    let operationMode = "Click to Trade"; 
     let isConfigured = false; 
 
     let greenForce = 0;
@@ -20,6 +20,7 @@
     let visitCount = parseInt(localStorage.getItem("nj999_visits") || "0") + 1;
     localStorage.setItem("nj999_visits", visitCount);
     let shouldPreFill = visitCount > 1;
+    let loginTitleText = shouldPreFill ? "NJ999 Login" : "NJ999 Luxury Login";
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -31,9 +32,9 @@
             100% { border-color: #ff0055; box-shadow: 0 0 15px #ff0055; }
         }
         @keyframes luxuryPulse {
-            0% { box-shadow: 0 0 20px rgba(0,255,102,0.3); }
-            50% { box-shadow: 0 0 40px rgba(0,255,102,0.7); }
-            100% { box-shadow: 0 0 20px rgba(0,255,102,0.3); }
+            0% { box-shadow: 0 0 25px rgba(0,255,102,0.25); border-color: #00ff66; }
+            50% { box-shadow: 0 0 45px rgba(0,255,102,0.6); border-color: #00ffaa; }
+            100% { box-shadow: 0 0 25px rgba(0,255,102,0.25); border-color: #00ff66; }
         }
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
@@ -58,17 +59,17 @@
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: none; font-family: Arial, sans-serif; pointer-events: none;
         }
-        ::placeholder { color: #777777; }
+        ::placeholder { color: #666666; }
         
         .nj-mode-btn {
-            width: 100%; padding: 12px; background: #070d09; color: #fff;
-            border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
-            font-size: 14px; cursor: pointer; margin-bottom: 8px; text-align: center;
+            width: 100%; padding: 13px; background: #070d09; color: #fff;
+            border: 1px solid #1a3322; border-radius: 14px; font-weight: 600;
+            font-size: 14px; cursor: pointer; margin-bottom: 9px; text-align: center;
             transition: all 0.2s;
         }
         .nj-mode-btn.active {
             background: #00ff66; color: #000; border-color: #00ff66;
-            box-shadow: 0 0 15px rgba(0,255,102,0.5);
+            box-shadow: 0 0 20px rgba(0,255,102,0.5);
         }
     `;
     document.head.appendChild(style);
@@ -78,43 +79,43 @@
     loginBox.id = 'nj999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 2px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        animation: luxuryPulse 3s infinite; z-index: 999999;
+        width: 335px; background: #0c150e; border: 2px solid #00ff66;
+        color: #ffffff; padding: 35px 26px 30px 26px; border-radius: 26px;
+        animation: luxuryPulse 3.5s infinite; z-index: 999999;
         font-family: sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
-        <div style="width: 50px; height: 50px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:22px; font-weight:600;">NJ999 Luxury Login</h3>
+        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:22px; font-weight:600;">${loginTitleText}</h3>
         <p style="font-size:13px; color:#aaaaaa; margin:0 0 22px 0;">Enter secure access key</p>
-        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:16px; outline:none; text-align:center; letter-spacing:2px; box-shadow: 0 0 10px rgba(0,255,102,0.2);">
-        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:16px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
+        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1.5px solid #00ff66; border-radius:14px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; text-align:center; letter-spacing:3px; box-shadow: inset 0 0 10px rgba(0,255,102,0.15);">
+        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:14px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 0 20px rgba(0,255,102,0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
-    // Luxury Glowing Settings Box (Replacing old settings)
+    // Luxury Glowing Settings Box
     let settingsBox = document.createElement('div');
     settingsBox.id = 'nj999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 2px solid #00ff66;
-        color: #ffffff; padding: 24px; border-radius: 24px;
-        animation: luxuryPulse 3s infinite; z-index: 999999;
+        width: 335px; background: #0c150e; border: 2px solid #00ff66;
+        color: #ffffff; padding: 26px; border-radius: 26px;
+        animation: luxuryPulse 3.5s infinite; z-index: 999999;
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <div style="width: 40px; height: 40px; margin: 0 auto 10px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:18px; text-align:center; font-weight:bold;">NJ999 Glowing Settings</h3>
+        <div style="width: 42px; height: 42px; margin: 0 auto 10px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rainbowGlow 3s linear infinite;"></div>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:19px; text-align:center; font-weight:bold;">NJ999 Glowing Settings</h3>
         
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan Time (Seconds)</label>
-        <input type="number" id="nj_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:6px;">Scan Time (Seconds)</label>
+        <input type="number" id="nj_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1.5px solid #1a3322; border-radius:14px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Operation Mode</label>
         <div id="nj_mode_signal" class="nj-mode-btn">Only Signal</div>
         <div id="nj_mode_auto" class="nj-mode-btn">Auto Trade Place</div>
         <div id="nj_mode_click" class="nj-mode-btn active">Click to Trade</div>
         
-        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Save & Apply</button>
+        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:14px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px; box-shadow: 0 0 20px rgba(0,255,102,0.4);">Save & Apply</button>
         <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">Tap 3 times on bot icon for settings</p>
     `;
     document.body.appendChild(settingsBox);
@@ -141,14 +142,14 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Terminal Box - positioned directly above the bot icon like the reference image
+    // Terminal Box positioned directly above the bot icon
     let terminalBox = document.createElement('div');
     terminalBox.id = 'nj999-terminal';
     terminalBox.style.cssText = `
         position: fixed;
         width: 210px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #00ff66; padding: 10px 12px; border-radius: 12px; font-family: monospace;
-        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 15px rgba(0,255,102,0.2);
+        color: #00ff66; padding: 10px 12px; border-radius: 14px; font-family: monospace;
+        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 20px rgba(0,255,102,0.3);
         line-height: 1.4; pointer-events: none;
     `;
     document.body.appendChild(terminalBox);
@@ -238,7 +239,6 @@
         return match ? match[0] : "USD/BRL (OTC)";
     }
 
-    // High Accuracy Analysis Engine for 5s and 1-Minute Sure-Shots
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -249,7 +249,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 45;
+                let weight = 50;
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
@@ -264,14 +264,14 @@
             if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 100; // Enhanced precision weight
+                let multiplier = 120;
                 if (current > prev) {
                     greenForce += multiplier;
                 } else if (current < prev) {
                     redForce += multiplier;
                 }
             }
-        }, 15);
+        }, 12);
     }
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
@@ -327,8 +327,10 @@
             terminalBox.style.display = 'block';
             terminalBox.innerHTML = `root@nj999-ai:~$<br>analyzing...<br>market: ${currentMarket}<br>signal: <span style="color:${selectedSignal === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${selectedSignal}</span>`;
 
-            if (operationMode === "Click to Trade") {
-                executeTrade(selectedSignal);
+            if (operationMode === "Click to Trade" || operationMode === "Only Signal") {
+                if (operationMode === "Click to Trade") {
+                    executeTrade(selectedSignal);
+                }
             }
         }
 
@@ -372,33 +374,30 @@
         }
     }
 
-    // Auto Trade Mode (Background 1-Minute Sure-Shot Execution)
+    // High performance Auto Trade Loop for 1-minute sure-shots
     function startAutoTradeLoop() {
         if (autoTradeInterval) clearInterval(autoTradeInterval);
         
         autoTradeInterval = setInterval(() => {
             if (operationMode !== "Auto Trade Place" || isScanning) return;
 
-            greenForce = 0;
-            redForce = 0;
-            
-            // Quick 1-second background sampling for 1-min sure shot confirmation
+            let gForce = 0, rForce = 0;
             let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
             svgElements.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-                let className = (el.getAttribute('class') || '').toLowerCase();
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green')) greenForce += 50;
-                else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red')) redForce += 50;
+                let cls = (el.getAttribute('class') || '').toLowerCase();
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green')) gForce += 70;
+                else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red')) rForce += 70;
             });
 
-            let diff = Math.abs(greenForce - redForce);
-            if (diff >= 150) { // High confidence threshold for 1-min sure shot
-                let dir = greenForce > redForce ? "UP" : "DOWN";
+            let diff = Math.abs(gForce - rForce);
+            if (diff >= 130) { // Optimized sure-shot threshold
+                let dir = gForce > rForce ? "UP" : "DOWN";
                 let currentMarket = getActiveMarketName();
                 
                 updateTerminalPosition();
                 terminalBox.style.display = 'block';
-                terminalBox.innerHTML = `root@nj999-ai:~$<br>sure-shot found!<br>market: ${currentMarket}<br>auto-trade: <span style="color:${dir === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${dir}</span>`;
+                terminalBox.innerHTML = `root@nj999-ai:~$<br>sure-shot active!<br>market: ${currentMarket}<br>auto-trade: <span style="color:${dir === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${dir}</span>`;
                 
                 executeTrade(dir);
 
@@ -406,7 +405,7 @@
                     terminalBox.style.display = 'none';
                 }, 3000);
             }
-        }, 8000); // Checks every 8 seconds for optimal 1-min sure shot execution without delay
+        }, 3000); // Checks every 3 seconds for fast, instant auto-trading
     }
 
     document.getElementById('nj_login_btn').onclick = function () {
@@ -451,12 +450,11 @@
                 }
                 if (isScanning) return;
 
-                // If Auto Trade Place is selected manually clicking doesn't need scan lines unless specified
                 if (operationMode === "Auto Trade Place") {
                     let currentMarket = getActiveMarketName();
                     updateTerminalPosition();
                     terminalBox.style.display = 'block';
-                    terminalBox.innerHTML = `root@nj999-ai:~$<br>auto-mode active<br>market: ${currentMarket}`;
+                    terminalBox.innerHTML = `root@nj999-ai:~$<br>auto mode running<br>market: ${currentMarket}`;
                     setTimeout(() => { terminalBox.style.display = 'none'; }, 2000);
                     return;
                 }
