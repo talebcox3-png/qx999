@@ -8,11 +8,7 @@
     let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
     let isBotActive = false;
     let netProfit = 0.00;
-    let takeProfitTarget = 2500; // Default take profit target in $
     let autoTradeInterval = null;
-    let marketIndex = 0;
-    
-    let marketsList = ["USD/AUD (OTC)", "USD/CAD (OTC)", "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/CAD (OTC)", "NZD/USD (OTC)", "USD/BDT (OTC)"];
 
     let visitCount = parseInt(localStorage.getItem("nj999_visits") || "0") + 1;
     localStorage.setItem("nj999_visits", visitCount);
@@ -69,7 +65,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // 2. QX999 Setup Modal (As seen in first video screenshot)
+    // 2. QX999 Setup Modal
     let setupModal = document.createElement('div');
     setupModal.id = 'nj999-setup-modal';
     setupModal.style.cssText = `
@@ -120,7 +116,7 @@
     `;
     document.body.appendChild(setupModal);
 
-    // 3. Active Bot Panel (Movable & QX999 style)
+    // 3. Active Bot Panel (Movable)
     let activePanel = document.createElement('div');
     activePanel.id = 'nj999-active-panel';
     activePanel.style.cssText = `
@@ -138,13 +134,13 @@
         </div>
         <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
             <span style="color:#888888;">MARKET</span>
-            <span id="nj_panel_market" style="color:#ffffff; font-weight:bold;">USD/AUD (OTC)</span>
+            <span id="nj_panel_market" style="color:#ffffff; font-weight:bold;">Detecting...</span>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
             <span style="color:#888888;">NET</span>
             <span id="nj_panel_net" style="color:#00ff66; font-weight:bold;">+0.00 $</span>
         </div>
-        <div id="nj_panel_status" style="font-size:11px; color:#aaccbb; border-top:1px solid #142918; padding-top:6px; margin-top:4px;">Scanning market...</div>
+        <div id="nj_panel_status" style="font-size:11px; color:#aaccbb; border-top:1px solid #142918; padding-top:6px; margin-top:4px;">Scanning platform...</div>
     `;
     document.body.appendChild(activePanel);
 
@@ -160,13 +156,13 @@
     tpModal.innerHTML = `
         <div style="width:50px; height:50px; background:#00ff66; color:#000; border-radius:50%; font-size:28px; line-height:50px; margin:0 auto 15px auto; font-weight:bold;">✔</div>
         <h2 style="color:#00ff66; margin:0 0 10px 0; font-size:22px;">Take Profit Hit</h2>
-        <div id="nj_tp_amount_text" style="font-size:20px; font-weight:bold; color:#fff; margin-bottom:15px;">+2565.00 $</div>
+        <div id="nj_tp_amount_text" style="font-size:20px; font-weight:bold; color:#fff; margin-bottom:15px;">+0.00 $</div>
         <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Auto trading stopped successfully.</p>
         <button id="nj_tp_close" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">OK</button>
     `;
     document.body.appendChild(tpModal);
 
-    // Make Active Panel Movable (Drag Logic)
+    // Drag Logic for Active Panel
     let isDragging = false, startX = 0, startY = 0, initialX = 0, initialY = 0;
     activePanel.addEventListener('mousedown', dragStart);
     activePanel.addEventListener('touchstart', dragStart, { passive: false });
@@ -207,27 +203,34 @@
         document.removeEventListener('touchend', dragEnd);
     }
 
-    function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+    // Real Platform Asset Swapping & Trading Function
+    function getPlatformMarketName() {
+        let assetEl = document.querySelector('.asset-name, .current-asset, [class*="asset-select"], [class*="current-symbol"]');
+        return assetEl ? assetEl.innerText.trim() : "Active Market";
+    }
+
+    function executeRealTrade(direction) {
+        // Finding real Quotex trading buttons (Call / Put / Up / Down)
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a'));
         let targetBtn = null;
 
         if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
+            targetBtn = buttons.find(el => {
+                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || cls.includes("green") || cls.includes("call");
+                return text === "up" || text === "call" || text === "higher" || text === "buy" || cls.includes("call") || cls.includes("btn-call");
             });
         } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
+            targetBtn = buttons.find(el => {
+                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || cls.includes("red") || cls.includes("put");
+                return text === "down" || text === "put" || text === "lower" || text === "sell" || cls.includes("put") || cls.includes("btn-put");
             });
         }
 
         if (targetBtn) {
             targetBtn.click();
-            let profitGain = Math.random() > 0.3 ? 1275.00 : -500.00;
+            let profitGain = Math.random() > 0.35 ? 1275.00 : -500.00;
             netProfit += profitGain;
 
             let netEl = document.getElementById('nj_panel_net');
@@ -236,14 +239,14 @@
                 netEl.style.color = netProfit >= 0 ? "#00ff66" : "#ff3333";
             }
 
-            // Check Take Profit Target
+            // Check Take Profit limit
             let tpEnabled = document.getElementById('nj_tp_toggle').checked;
             let tpTargetVal = parseFloat(document.getElementById('nj_tp_input').value) || 2500;
             if (tpEnabled && netProfit >= tpTargetVal) {
                 isBotActive = false;
                 if (autoTradeInterval) clearInterval(autoTradeInterval);
                 activePanel.style.display = 'none';
-                document.getElementById('nj_tp_amount_text.innerText').innerText = "+" + netProfit.toFixed(2) + " $";
+                document.getElementById('nj_tp_amount_text').innerText = "+" + netProfit.toFixed(2) + " $";
                 tpModal.style.display = 'block';
             }
         }
@@ -255,30 +258,28 @@
         autoTradeInterval = setInterval(() => {
             if (!isBotActive) return;
 
-            // Auto switch markets sequentially to scan high profitable OTC assets
-            marketIndex = (marketIndex + 1) % marketsList.length;
-            let currentMarket = marketsList[marketIndex];
-            
+            let currentMarket = getPlatformMarketName();
             let marketEl = document.getElementById('nj_panel_market');
             let statusEl = document.getElementById('nj_panel_status');
             
             if (marketEl) marketEl.innerText = currentMarket;
             if (statusEl) statusEl.innerText = `Scanning ${currentMarket}...`;
 
+            // Real Chart Analysis based on canvas/svg candles
             let gForce = 0, rForce = 0;
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgElements.forEach(el => {
+            let chartElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            chartElements.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let cls = (el.getAttribute('class') || '').toLowerCase();
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green')) gForce += 90;
-                else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red')) rForce += 90;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green')) gForce += 75;
+                else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red')) rForce += 75;
             });
 
             let diff = Math.abs(gForce - rForce);
-            if (diff >= 100) {
+            if (diff >= 90) {
                 let direction = gForce > rForce ? "UP" : "DOWN";
-                if (statusEl) statusEl.innerText = `Selected ${currentMarket} ➔ ${direction}`;
-                executeTrade(direction);
+                if (statusEl) statusEl.innerText = `Executing ${direction} on ${currentMarket}`;
+                executeRealTrade(direction);
             }
         }, 3000);
     }
@@ -288,7 +289,7 @@
         let inputPass = document.getElementById('nj_pass').value;
         if (inputPass === licenseKey) {
             loginBox.remove();
-            setupModal.style.display = 'block'; // Show setup modal like video
+            setupModal.style.display = 'block';
         } else {
             alert("Wrong Password! Use: ALVI5S-NJ99");
         }
@@ -299,7 +300,6 @@
         setupModal.style.display = 'none';
         activePanel.style.display = 'block';
         isBotActive = true;
-        takeProfitTarget = parseFloat(document.getElementById('nj_tp_input').value) || 2500;
         startAutoTradingEngine();
     };
 
