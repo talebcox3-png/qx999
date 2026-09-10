@@ -35,12 +35,13 @@
             66% { color: #00ffff; }
             100% { color: #ff0055; }
         }
-        /* Clean bot container without background ring */
+        /* Pure round logo container matching the reference screenshot */
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 54px; height: 54px;
+            display: flex; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            background: transparent; border: none; padding: 4px;
+            background: transparent; border: none; padding: 0;
         }
         #nj999-logo-icon {
             width: 54px; height: 54px;
@@ -50,14 +51,9 @@
             background-size: cover;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 1.5px solid rgba(0,255,102,0.4);
-            box-shadow: 0 0 12px rgba(0, 255, 102, 0.3); /* Subtle soft glow behind logo */
+            border: 1.5px solid rgba(0,255,102,0.6);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
             pointer-events: none;
-        }
-        #nj999-circle-bot span {
-            font-weight: 700; font-size: 11px;
-            margin-top: 4px; font-family: 'Segoe UI', Tahoma, sans-serif; pointer-events: none;
-            color: #00ff66; text-shadow: 0 0 6px rgba(0,255,102,0.5);
         }
         ::placeholder { color: #555555; }
         
@@ -137,11 +133,7 @@
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'nj999-logo-icon';
-    let logoText = document.createElement('span');
-    logoText.innerText = "NJ999";
-
     botContainer.appendChild(logoIcon);
-    botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
     let terminalBox = document.createElement('div');
@@ -240,7 +232,6 @@
         return match ? match[0] : "USD/BRL (OTC)";
     }
 
-    // High accuracy price-action filter to prevent losses in 5s trades
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -315,13 +306,12 @@
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             
-            // Strong trend alignment to ensure win rate
             if (greenForce > redForce) {
                 selectedSignal = "UP";
             } else if (redForce > greenForce) {
                 selectedSignal = "DOWN";
             } else {
-                selectedSignal = "UP"; // Default fallback
+                selectedSignal = "UP";
             }
 
             let currentMarket = getActiveMarketName();
