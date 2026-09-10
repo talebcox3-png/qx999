@@ -6,7 +6,7 @@
 
     let licenseKey = "ALVI5S-NJ99";
     let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
-    let scanDurationSec = 5; 
+    let scanDurationSec = 6; // Adjusted for slightly slower and more accurate scan
     let operationMode = "NJ999 TRADE"; 
     let isConfigured = false; 
 
@@ -24,10 +24,10 @@
     const style = document.createElement('style');
     style.innerHTML = `
         @keyframes borderRgb {
-            0% { border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.2); }
-            33% { border-color: #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.2); }
-            66% { border-color: #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
-            100% { border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.2); }
+            0% { border-color: #ff0055; box-shadow: 0 0 12px rgba(255,0,85,0.25); }
+            33% { border-color: #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.25); }
+            66% { border-color: #00ffff; box-shadow: 0 0 12px rgba(0,255,255,0.25); }
+            100% { border-color: #ff0055; box-shadow: 0 0 12px rgba(255,0,85,0.25); }
         }
         @keyframes textRgb {
             0% { color: #ff0055; }
@@ -35,30 +35,34 @@
             66% { color: #00ffff; }
             100% { color: #ff0055; }
         }
-        /* Pure round logo container matching the reference screenshot */
+        /* Larger bot logo matching video reference */
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
-            width: 54px; height: 54px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            background: transparent; border: none; padding: 0;
+            background: transparent; border: none; padding: 4px;
         }
         #nj999-logo-icon {
-            width: 54px; height: 54px;
+            width: 72px; height: 72px;
             background-color: #0c150e;
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: cover;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 1.5px solid rgba(0,255,102,0.6);
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+            border: 2px solid rgba(0,255,102,0.6);
+            box-shadow: 0 0 18px rgba(0, 255, 102, 0.45);
             pointer-events: none;
         }
-        ::placeholder { color: #555555; }
+        #nj999-circle-bot span {
+            font-weight: 700; font-size: 13px;
+            margin-top: 5px; font-family: 'Segoe UI', Tahoma, sans-serif; pointer-events: none;
+            color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.6);
+        }
+        ::placeholder { color: #666666; }
         
         .nj-mode-btn {
-            width: 100%; padding: 12px; background: #040805; color: #888;
+            width: 100%; padding: 12px; background: #0c150e; color: #888;
             border: 1px solid #1f3d2b; border-radius: 12px; font-weight: 600;
             font-size: 14px; cursor: pointer; margin-bottom: 10px; text-align: center;
             transition: all 0.25s ease;
@@ -70,44 +74,45 @@
     `;
     document.head.appendChild(style);
 
-    // Login Box with RGB Border
+    // Video-inspired Clean & Premium Login Box
     let loginBox = document.createElement('div');
     loginBox.id = 'nj999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #080f0a; border: 2px solid #00ff66;
+        width: 330px; background: rgba(10, 18, 12, 0.96); border: 2px solid #00ff66;
         color: #ffffff; padding: 35px 26px 30px 26px; border-radius: 20px;
         animation: borderRgb 4s linear infinite; z-index: 999999;
         font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; display: block;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.85); backdrop-filter: blur(10px);
     `;
     loginBox.innerHTML = `
-        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 1.5px solid #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.3);"></div>
-        <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 PRO LOGIN</h3>
-        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#040805; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px;">
+        <div style="width: 64px; height: 64px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; box-shadow: 0 0 15px rgba(0,255,102,0.4);"></div>
+        <h3 style="margin:0 0 6px 0; font-size:22px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 PRO</h3>
+        <p style="margin:0 0 22px 0; font-size:12px; color:#888;">Enter your license key to initialize bot</p>
+        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#060a07; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px;">
         <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
-    // Settings Box with RGB Border
+    // Settings Box
     let settingsBox = document.createElement('div');
     settingsBox.id = 'nj999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #080f0a; border: 2px solid #00ff66;
+        width: 330px; background: rgba(10, 18, 12, 0.96); border: 2px solid #00ff66;
         color: #ffffff; padding: 26px; border-radius: 20px;
         animation: borderRgb 4s linear infinite; z-index: 999999;
         font-family: 'Segoe UI', Tahoma, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.85); backdrop-filter: blur(10px);
     `;
     settingsBox.innerHTML = `
-        <div style="text-align:center; margin-bottom:15px;">
-            <div style="width: 44px; height: 44px; margin: 0 auto 8px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 1.5px solid #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.3);"></div>
-            <h3 style="margin:0; font-size:18px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 SETTINGS</h3>
+        <div style="text-align:center; margin-bottom:18px;">
+            <div style="width: 52px; height: 52px; margin: 0 auto 10px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.4);"></div>
+            <h3 style="margin:0; font-size:19px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 SETTINGS</h3>
         </div>
         
         <label style="font-size:12px; color:#888; display:block; margin-bottom:6px; font-weight:600; text-transform:uppercase;">Scan Duration (Seconds)</label>
-        <input type="number" id="nj_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#040805; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:16px; outline:none; font-size:15px;">
+        <input type="number" id="nj_scan_delay" value="6" min="3" style="width:100%; padding:12px; background:#060a07; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:16px; outline:none; font-size:15px;">
         
         <label style="font-size:12px; color:#888; display:block; margin-bottom:8px; font-weight:600; text-transform:uppercase;">Operation Mode</label>
         <div id="nj_mode_signal" class="nj-mode-btn">ONLY SIGNAL</div>
@@ -133,7 +138,11 @@
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'nj999-logo-icon';
+    let logoText = document.createElement('span');
+    logoText.innerText = "NJ999";
+
     botContainer.appendChild(logoIcon);
+    botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
     let terminalBox = document.createElement('div');
@@ -265,7 +274,7 @@
                     redForce += multiplier;
                 }
             }
-        }, 10);
+        }, 15);
     }
 
     function drawSmokeScanLine() {
@@ -298,12 +307,13 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 10;
+        // Slower movement step for smooth scanning line
+        scanY += 5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
             
             if (greenForce > redForce) {
@@ -376,7 +386,7 @@
 
     document.getElementById('nj_save_btn').onclick = function () {
         let scanInput = parseFloat(document.getElementById('nj_scan_delay').value);
-        if (!isNaN(scanInput) && scanInput >= 2) scanDurationSec = scanInput;
+        if (!isNaN(scanInput) && scanInput >= 3) scanDurationSec = scanInput;
 
         settingsBox.style.display = 'none';
         isConfigured = true;
