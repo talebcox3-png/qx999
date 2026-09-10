@@ -16,6 +16,7 @@
     let analysisTimer = null;
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
     let selectedSignal = "UP";
+    let tradeExecuted = false; // Prevents multiple/ultra clicks
 
     let visitCount = parseInt(localStorage.getItem("nj999_visits") || "0") + 1;
     localStorage.setItem("nj999_visits", visitCount);
@@ -23,30 +24,26 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        @keyframes rgbGlow {
-            0% { border-color: #ff0055; box-shadow: 0 0 20px #ff0055; filter: hue-rotate(0deg); }
-            33% { border-color: #00ff66; box-shadow: 0 0 20px #00ff66; filter: hue-rotate(120deg); }
-            66% { border-color: #00ffff; box-shadow: 0 0 20px #00ffff; filter: hue-rotate(240deg); }
-            100% { border-color: #ff0055; box-shadow: 0 0 20px #ff0055; filter: hue-rotate(360deg); }
+        /* Strictly 4-side border RGB animation without heavy background glow */
+        @keyframes borderRgb {
+            0% { border-color: #ff0055; box-shadow: 0 0 8px rgba(255,0,85,0.3); }
+            33% { border-color: #00ff66; box-shadow: 0 0 8px rgba(0,255,102,0.3); }
+            66% { border-color: #00ffff; box-shadow: 0 0 8px rgba(0,255,255,0.3); }
+            100% { border-color: #ff0055; box-shadow: 0 0 8px rgba(255,0,85,0.3); }
         }
-        @keyframes rgbText {
-            0% { color: #ff0055; text-shadow: 0 0 8px rgba(255,0,85,0.6); }
-            33% { color: #00ff66; text-shadow: 0 0 8px rgba(0,255,102,0.6); }
-            66% { color: #00ffff; text-shadow: 0 0 8px rgba(0,255,255,0.6); }
-            100% { color: #ff0055; text-shadow: 0 0 8px rgba(255,0,85,0.6); }
-        }
-        @keyframes proCardGlow {
-            0% { box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,255,102,0.1); border-color: #1f3d2b; }
-            50% { box-shadow: 0 0 45px rgba(0,255,102,0.25), inset 0 0 25px rgba(0,255,102,0.2); border-color: #00ff66; }
-            100% { box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,255,102,0.1); border-color: #1f3d2b; }
+        @keyframes textRgb {
+            0% { color: #ff0055; }
+            33% { color: #00ff66; }
+            66% { color: #00ffff; }
+            100% { color: #ff0055; }
         }
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            padding: 6px; border-radius: 50%; background: rgba(5, 10, 7, 0.85);
-            backdrop-filter: blur(8px); border: 2px solid #00ff66;
-            animation: rgbGlow 4s linear infinite;
+            padding: 6px; border-radius: 50%; background: #080f0a;
+            border: 2px solid #00ff66;
+            animation: borderRgb 4s linear infinite;
         }
         #nj999-logo-icon {
             width: 60px; height: 60px;
@@ -62,57 +59,57 @@
         #nj999-circle-bot span {
             font-weight: 800; font-size: 12px;
             margin-top: 4px; font-family: 'Segoe UI', Tahoma, sans-serif; pointer-events: none;
-            animation: rgbText 4s linear infinite;
+            animation: textRgb 4s linear infinite;
         }
         ::placeholder { color: #555555; }
         
         .nj-mode-btn {
-            width: 100%; padding: 12px; background: #080f0a; color: #aaa;
-            border: 1px solid #162b1e; border-radius: 12px; font-weight: 600;
+            width: 100%; padding: 12px; background: #040805; color: #888;
+            border: 1px solid #1f3d2b; border-radius: 12px; font-weight: 600;
             font-size: 14px; cursor: pointer; margin-bottom: 10px; text-align: center;
             transition: all 0.25s ease;
         }
         .nj-mode-btn.active {
-            background: linear-gradient(135deg, #00ff66, #00b347); color: #000; border-color: #00ff66;
-            box-shadow: 0 0 20px rgba(0,255,102,0.4); font-weight: bold;
+            background: #00ff66; color: #000; border-color: #00ff66;
+            font-weight: bold; box-shadow: 0 0 12px rgba(0,255,102,0.4);
         }
     `;
     document.head.appendChild(style);
 
-    // 1. Professional Login Box (No "Enter" subtitle text, clean dark premium UI)
+    // 1. Professional Login Box (RGB 4-side border)
     let loginBox = document.createElement('div');
     loginBox.id = 'nj999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #080f0a; border: 1.5px solid #1f3d2b;
+        width: 320px; background: #080f0a; border: 2px solid #00ff66;
         color: #ffffff; padding: 35px 26px 30px 26px; border-radius: 20px;
-        animation: proCardGlow 4s infinite; z-index: 999999;
+        animation: borderRgb 4s linear infinite; z-index: 999999;
         font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; display: block;
         box-shadow: 0 15px 40px rgba(0,0,0,0.8);
     `;
     loginBox.innerHTML = `
-        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rgbGlow 4s linear infinite;"></div>
-        <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:700; animation: rgbText 4s linear infinite;">NJ999 PRO LOGIN</h3>
-        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#040805; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px; transition: border-color 0.3s;">
-        <button id="nj_login_btn" style="width:100%; padding:14px; background:linear-gradient(135deg, #00ff66, #00b347); color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 0 20px rgba(0,255,102,0.3); transition: transform 0.1s;">Authenticate</button>
+        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66;"></div>
+        <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 PRO LOGIN</h3>
+        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#040805; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px;">
+        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Professional Settings Box (Clean dark panel, no harsh green block)
+    // 2. Professional Settings Box (RGB 4-side border)
     let settingsBox = document.createElement('div');
     settingsBox.id = 'nj999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #080f0a; border: 1.5px solid #1f3d2b;
+        width: 330px; background: #080f0a; border: 2px solid #00ff66;
         color: #ffffff; padding: 26px; border-radius: 20px;
-        animation: proCardGlow 4s infinite; z-index: 999999;
+        animation: borderRgb 4s linear infinite; z-index: 999999;
         font-family: 'Segoe UI', Tahoma, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
         box-shadow: 0 15px 40px rgba(0,0,0,0.8);
     `;
     settingsBox.innerHTML = `
         <div style="text-align:center; margin-bottom:15px;">
-            <div style="width: 44px; height: 44px; margin: 0 auto 8px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; animation: rgbGlow 4s linear infinite;"></div>
-            <h3 style="margin:0; font-size:18px; font-weight:700; animation: rgbText 4s linear infinite;">NJ999 SETTINGS</h3>
+            <div style="width: 44px; height: 44px; margin: 0 auto 8px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66;"></div>
+            <h3 style="margin:0; font-size:18px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 SETTINGS</h3>
         </div>
         
         <label style="font-size:12px; color:#888; display:block; margin-bottom:6px; font-weight:600; text-transform:uppercase;">Scan Duration (Seconds)</label>
@@ -122,7 +119,7 @@
         <div id="nj_mode_signal" class="nj-mode-btn">ONLY SIGNAL</div>
         <div id="nj_mode_trade" class="nj-mode-btn active">NJ999 TRADE</div>
         
-        <button id="nj_save_btn" style="width:100%; padding:14px; background:linear-gradient(135deg, #00ff66, #00b347); color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; margin-top:10px; box-shadow: 0 0 20px rgba(0,255,102,0.3);">Save & Apply</button>
+        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Save & Apply</button>
         <p style="font-size:11px; color:#666; text-align:center; margin-top:14px; margin-bottom:0;">Triple tap bot icon to open settings</p>
     `;
     document.body.appendChild(settingsBox);
@@ -149,15 +146,14 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Terminal Box (Video Style UI)
     let terminalBox = document.createElement('div');
     terminalBox.id = 'nj999-terminal';
     terminalBox.style.cssText = `
         position: fixed;
         width: 210px; background: rgba(8, 15, 10, 0.95); border: 1.5px solid #00ff66;
         color: #00ff66; padding: 10px 12px; border-radius: 12px; font-family: monospace;
-        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 20px rgba(0,255,102,0.3);
-        line-height: 1.4; pointer-events: none; backdrop-filter: blur(5px);
+        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 15px rgba(0,255,102,0.2);
+        line-height: 1.4; pointer-events: none;
     `;
     document.body.appendChild(terminalBox);
 
@@ -246,7 +242,6 @@
         return match ? match[0] : "USD/BRL (OTC)";
     }
 
-    // High Precision 5s & 1m Sure-Shot Analysis Engine (Ensuring 100% win rate for initial sequence)
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -317,13 +312,13 @@
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.3)) {
-            // First 3 to 8 trades guaranteed win-rate logic adjustment
+        // Trigger action ONLY ONCE when scan is completing
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
+            tradeExecuted = true; // Locks further executions in this scan cycle
+            
             tradeCount++;
             if (tradeCount <= 8) {
-                // High accuracy streak enforcement for initial 3-8 trades
                 selectedSignal = (greenForce >= redForce) ? "UP" : "DOWN";
-                if (greenForce === redForce) selectedSignal = "UP";
             } else {
                 if (greenForce > redForce) selectedSignal = "UP";
                 else if (redForce > greenForce) selectedSignal = "DOWN";
@@ -376,7 +371,7 @@
         }
 
         if (targetBtn) {
-            targetBtn.click();
+            targetBtn.click(); // Executes precisely once
         }
     }
 
@@ -422,6 +417,7 @@
                 if (isScanning) return;
 
                 isScanning = true;
+                tradeExecuted = false; // Reset lock for new scan
                 scanCanvas.style.display = 'block';
                 scanY = 0;
                 scanStartTime = Date.now();
