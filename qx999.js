@@ -31,21 +31,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: #0c150e;
+            background-color: transparent;
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 2px solid #e58e26; /* বাম পাশের বটের মতো গোল রিং বর্ডার */
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 2px 4px rgba(255,255,255,0.15); /* বাম পাশের বটের মতো পারফেক্ট ডার্ক শ্যাডো */
+            border: none;
+            box-shadow: 2px 6px 16px rgba(0, 0, 0, 0.85); /* হালকা কালো শ্যাডো */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
             transform: translateX(4px);
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.7), 0 6px 18px rgba(0, 0, 0, 0.9) !important;
-            border-color: #00ff66 !important;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.7) !important;
             transform: translateX(4px) !important;
         }
         #qx999-circle-bot span {
@@ -67,7 +66,7 @@
     `;
     document.head.appendChild(style);
 
-    // Login Box (১ম ছবির মতো হুবহু)
+    // Login Box (ஹুবহু ১ম ছবির মতো)
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -85,7 +84,7 @@
     `;
     document.body.appendChild(loginBox);
 
-    // Settings Box (২য় ছবির মতো হুবহু)
+    // Settings Box (হুবহু ২য় ছবির মতো)
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -115,6 +114,7 @@
     `;
     document.body.appendChild(settingsBox);
 
+    // Direction buttons logic
     ['Up', 'Down', 'Random'].forEach(dir => {
         let btnId = dir === 'Up' ? 'qx_dir_up' : (dir === 'Down' ? 'qx_dir_down' : 'qx_dir_random');
         document.getElementById(btnId).onclick = function () {
@@ -137,6 +137,7 @@
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
+    // Dragging logic
     let isDragging = false, hasMoved = false;
     let startX = 0, startY = 0, initialX = 0, initialY = 0;
 
@@ -185,6 +186,7 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
+    // Scan Canvas
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -203,6 +205,7 @@
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
+    // Advanced Market Analysis to evaluate both UP and DOWN accurately and reduce loss
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -281,6 +284,7 @@
             } else if (configuredTradeDirection === "Down") {
                 selectedSignal = "DOWN";
             } else {
+                // Random or Smart Analysis
                 if (greenForce > redForce) {
                     selectedSignal = "UP";
                 } else if (redForce > greenForce) {
@@ -347,12 +351,14 @@
         isConfigured = true;
     };
 
+    // Tap outside to close settings box
     window.addEventListener('click', function(e) {
         if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !botContainer.contains(e.target)) {
             settingsBox.style.display = 'none';
         }
     });
 
+    // 3 taps on icon to open settings (as mentioned in settings footer)
     let tapCount = 0, tapTimer = null;
     botContainer.addEventListener('click', function (e) {
         if (hasMoved || isDragging) return;
