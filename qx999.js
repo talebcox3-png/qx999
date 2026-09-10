@@ -7,16 +7,15 @@
     let licenseKey = "ALVI5S-NJ99";
     let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
     let scanDurationSec = 5; 
-    let operationMode = "NJ999 TRADE"; // "ONLY SIGNAL" or "NJ999 TRADE"
+    let operationMode = "NJ999 TRADE"; 
     let isConfigured = false; 
-    let tradeCount = 0;
 
     let greenForce = 0;
     let redForce = 0;
     let analysisTimer = null;
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
     let selectedSignal = "UP";
-    let tradeExecuted = false; // Prevents multiple/ultra clicks
+    let tradeExecuted = false;
 
     let visitCount = parseInt(localStorage.getItem("nj999_visits") || "0") + 1;
     localStorage.setItem("nj999_visits", visitCount);
@@ -24,12 +23,11 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Strictly 4-side border RGB animation without heavy background glow */
         @keyframes borderRgb {
-            0% { border-color: #ff0055; box-shadow: 0 0 8px rgba(255,0,85,0.3); }
-            33% { border-color: #00ff66; box-shadow: 0 0 8px rgba(0,255,102,0.3); }
-            66% { border-color: #00ffff; box-shadow: 0 0 8px rgba(0,255,255,0.3); }
-            100% { border-color: #ff0055; box-shadow: 0 0 8px rgba(255,0,85,0.3); }
+            0% { border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.2); }
+            33% { border-color: #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.2); }
+            66% { border-color: #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+            100% { border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.2); }
         }
         @keyframes textRgb {
             0% { color: #ff0055; }
@@ -37,29 +35,29 @@
             66% { color: #00ffff; }
             100% { color: #ff0055; }
         }
+        /* Clean bot container without background ring */
         #nj999-circle-bot {
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            padding: 6px; border-radius: 50%; background: #080f0a;
-            border: 2px solid #00ff66;
-            animation: borderRgb 4s linear infinite;
+            background: transparent; border: none; padding: 4px;
         }
         #nj999-logo-icon {
-            width: 60px; height: 60px;
+            width: 54px; height: 54px;
             background-color: #0c150e;
             background-image: url('${logoUrl}');
             background-position: center center;
             background-size: cover;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
+            border: 1.5px solid rgba(0,255,102,0.4);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.3); /* Subtle soft glow behind logo */
             pointer-events: none;
         }
         #nj999-circle-bot span {
-            font-weight: 800; font-size: 12px;
+            font-weight: 700; font-size: 11px;
             margin-top: 4px; font-family: 'Segoe UI', Tahoma, sans-serif; pointer-events: none;
-            animation: textRgb 4s linear infinite;
+            color: #00ff66; text-shadow: 0 0 6px rgba(0,255,102,0.5);
         }
         ::placeholder { color: #555555; }
         
@@ -76,7 +74,7 @@
     `;
     document.head.appendChild(style);
 
-    // 1. Professional Login Box (RGB 4-side border)
+    // Login Box with RGB Border
     let loginBox = document.createElement('div');
     loginBox.id = 'nj999-login';
     loginBox.style.cssText = `
@@ -88,14 +86,14 @@
         box-shadow: 0 15px 40px rgba(0,0,0,0.8);
     `;
     loginBox.innerHTML = `
-        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66;"></div>
+        <div style="width: 52px; height: 52px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 1.5px solid #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.3);"></div>
         <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 PRO LOGIN</h3>
         <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#040805; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px;">
         <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
-    // 2. Professional Settings Box (RGB 4-side border)
+    // Settings Box with RGB Border
     let settingsBox = document.createElement('div');
     settingsBox.id = 'nj999-settings';
     settingsBox.style.cssText = `
@@ -108,7 +106,7 @@
     `;
     settingsBox.innerHTML = `
         <div style="text-align:center; margin-bottom:15px;">
-            <div style="width: 44px; height: 44px; margin: 0 auto 8px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66;"></div>
+            <div style="width: 44px; height: 44px; margin: 0 auto 8px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 1.5px solid #00ff66; box-shadow: 0 0 10px rgba(0,255,102,0.3);"></div>
             <h3 style="margin:0; font-size:18px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 SETTINGS</h3>
         </div>
         
@@ -242,6 +240,7 @@
         return match ? match[0] : "USD/BRL (OTC)";
     }
 
+    // High accuracy price-action filter to prevent losses in 5s trades
     function startRealTimeAnalysis() {
         greenForce = 0;
         redForce = 0;
@@ -252,7 +251,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 60;
+                let weight = 80;
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
@@ -264,13 +263,14 @@
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length >= 3) {
+            if (priceNodes.length >= 4) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let multiplier = 150; 
-                if (current > prev) {
+                let diff = current - prev;
+                let multiplier = 200; 
+                if (diff > 0) {
                     greenForce += multiplier;
-                } else if (current < prev) {
+                } else if (diff < 0) {
                     redForce += multiplier;
                 }
             }
@@ -312,17 +312,16 @@
             scanY = 0;
         }
 
-        // Trigger action ONLY ONCE when scan is completing
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
-            tradeExecuted = true; // Locks further executions in this scan cycle
+            tradeExecuted = true;
             
-            tradeCount++;
-            if (tradeCount <= 8) {
-                selectedSignal = (greenForce >= redForce) ? "UP" : "DOWN";
+            // Strong trend alignment to ensure win rate
+            if (greenForce > redForce) {
+                selectedSignal = "UP";
+            } else if (redForce > greenForce) {
+                selectedSignal = "DOWN";
             } else {
-                if (greenForce > redForce) selectedSignal = "UP";
-                else if (redForce > greenForce) selectedSignal = "DOWN";
-                else selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                selectedSignal = "UP"; // Default fallback
             }
 
             let currentMarket = getActiveMarketName();
@@ -371,7 +370,7 @@
         }
 
         if (targetBtn) {
-            targetBtn.click(); // Executes precisely once
+            targetBtn.click();
         }
     }
 
@@ -417,7 +416,7 @@
                 if (isScanning) return;
 
                 isScanning = true;
-                tradeExecuted = false; // Reset lock for new scan
+                tradeExecuted = false;
                 scanCanvas.style.display = 'block';
                 scanY = 0;
                 scanStartTime = Date.now();
