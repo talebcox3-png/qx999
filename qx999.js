@@ -1,167 +1,141 @@
 (function () {
-    ['nj999-circle-bot', 'nj999-panel', 'nj999-login', 'nj999-scan-canvas', 'nj999-settings', 'nj999-terminal'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-NJ99";
-    let logoUrl = "https://i.ibb.co.com/LXTn4Kbw/5b49d86e-ad3b-424b-8b8d-ab67b391c117.jpg";
-    let scanDurationSec = 6; // Adjusted for slightly slower and more accurate scan
-    let operationMode = "NJ999 TRADE"; 
+    let licenseKey = "Alvi1234";
+    let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
+    let scanDurationSec = 5; 
+    let afterTradeScanSec = 5;
+    let configuredTradeDirection = "Random"; // "Up", "Down", "Random"
     let isConfigured = false; 
 
     let greenForce = 0;
     let redForce = 0;
     let analysisTimer = null;
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
-    let selectedSignal = "UP";
     let tradeExecuted = false;
+    let selectedSignal = "UP";
 
-    let visitCount = parseInt(localStorage.getItem("nj999_visits") || "0") + 1;
-    localStorage.setItem("nj999_visits", visitCount);
+    let visitCount = parseInt(localStorage.getItem("qx999_visits") || "0") + 1;
+    localStorage.setItem("qx999_visits", visitCount);
     let shouldPreFill = visitCount > 1;
 
     const style = document.createElement('style');
     style.innerHTML = `
-        @keyframes borderRgb {
-            0% { border-color: #ff0055; box-shadow: 0 0 12px rgba(255,0,85,0.25); }
-            33% { border-color: #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.25); }
-            66% { border-color: #00ffff; box-shadow: 0 0 12px rgba(0,255,255,0.25); }
-            100% { border-color: #ff0055; box-shadow: 0 0 12px rgba(255,0,85,0.25); }
-        }
-        @keyframes textRgb {
-            0% { color: #ff0055; }
-            33% { color: #00ff66; }
-            66% { color: #00ffff; }
-            100% { color: #ff0055; }
-        }
-        /* Larger bot logo matching video reference */
-        #nj999-circle-bot {
+        #qx999-circle-bot {
             position: fixed; top: 120px; right: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999; cursor: move; user-select: none; touch-action: none;
-            background: transparent; border: none; padding: 4px;
+            padding: 4px; border-radius: 50%;
         }
-        #nj999-logo-icon {
-            width: 72px; height: 72px;
+        #qx999-logo-icon {
+            width: 65px; height: 65px;
             background-color: #0c150e;
             background-image: url('${logoUrl}');
             background-position: center center;
-            background-size: cover;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 2px solid rgba(0,255,102,0.6);
-            box-shadow: 0 0 18px rgba(0, 255, 102, 0.45);
+            border: 2px solid #e58e26; /* বাম পাশের বটের মতো গোল রিং বর্ডার */
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 2px 4px rgba(255,255,255,0.15); /* বাম পাশের বটের মতো পারফেক্ট ডার্ক শ্যাডো */
             pointer-events: none;
+            transition: all 0.3s ease-in-out;
+            transform: translateX(4px);
         }
-        #nj999-circle-bot span {
-            font-weight: 700; font-size: 13px;
-            margin-top: 5px; font-family: 'Segoe UI', Tahoma, sans-serif; pointer-events: none;
-            color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.6);
+        #qx999-circle-bot.glowing #qx999-logo-icon {
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.7), 0 6px 18px rgba(0, 0, 0, 0.9) !important;
+            border-color: #00ff66 !important;
+            transform: translateX(4px) !important;
         }
-        ::placeholder { color: #666666; }
+        #qx999-circle-bot span {
+            color: #ffffff !important; font-weight: bold; font-size: 13px;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
+        }
+        ::placeholder { color: #777777; }
         
-        .nj-mode-btn {
-            width: 100%; padding: 12px; background: #0c150e; color: #888;
-            border: 1px solid #1f3d2b; border-radius: 12px; font-weight: 600;
-            font-size: 14px; cursor: pointer; margin-bottom: 10px; text-align: center;
-            transition: all 0.25s ease;
+        .qx-dir-btn {
+            width: 100%; padding: 12px; background: #070d09; color: #fff;
+            border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
+            font-size: 15px; cursor: pointer; margin-bottom: 8px; text-align: center;
+            transition: all 0.2s;
         }
-        .nj-mode-btn.active {
+        .qx-dir-btn.active {
             background: #00ff66; color: #000; border-color: #00ff66;
-            font-weight: bold; box-shadow: 0 0 12px rgba(0,255,102,0.4);
+            box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
     `;
     document.head.appendChild(style);
 
-    // Video-inspired Clean & Premium Login Box
+    // Login Box (১ম ছবির মতো হুবহু)
     let loginBox = document.createElement('div');
-    loginBox.id = 'nj999-login';
+    loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: rgba(10, 18, 12, 0.96); border: 2px solid #00ff66;
-        color: #ffffff; padding: 35px 26px 30px 26px; border-radius: 20px;
-        animation: borderRgb 4s linear infinite; z-index: 999999;
-        font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; display: block;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        font-family: sans-serif; text-align: center; display: block;
     `;
     loginBox.innerHTML = `
-        <div style="width: 64px; height: 64px; margin: 0 auto 15px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; box-shadow: 0 0 15px rgba(0,255,102,0.4);"></div>
-        <h3 style="margin:0 0 6px 0; font-size:22px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 PRO</h3>
-        <p style="margin:0 0 22px 0; font-size:12px; color:#888;">Enter your license key to initialize bot</p>
-        <input type="password" id="nj_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="Enter Access Key" style="width:100%; padding:14px 16px; background:#060a07; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:15px; outline:none; text-align:center; letter-spacing:1px;">
-        <button id="nj_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Authenticate</button>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
+        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
-    // Settings Box
+    // Settings Box (২য় ছবির মতো হুবহু)
     let settingsBox = document.createElement('div');
-    settingsBox.id = 'nj999-settings';
+    settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: rgba(10, 18, 12, 0.96); border: 2px solid #00ff66;
-        color: #ffffff; padding: 26px; border-radius: 20px;
-        animation: borderRgb 4s linear infinite; z-index: 999999;
-        font-family: 'Segoe UI', Tahoma, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 24px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <div style="text-align:center; margin-bottom:18px;">
-            <div style="width: 52px; height: 52px; margin: 0 auto 10px auto; background-image: url('${logoUrl}'); background-size: cover; border-radius: 50%; border: 2px solid #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.4);"></div>
-            <h3 style="margin:0; font-size:19px; font-weight:700; animation: textRgb 4s linear infinite;">NJ999 SETTINGS</h3>
-        </div>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
         
-        <label style="font-size:12px; color:#888; display:block; margin-bottom:6px; font-weight:600; text-transform:uppercase;">Scan Duration (Seconds)</label>
-        <input type="number" id="nj_scan_delay" value="6" min="3" style="width:100%; padding:12px; background:#060a07; color:#fff; border:1px solid #1f3d2b; border-radius:12px; box-sizing:border-box; margin-bottom:16px; outline:none; font-size:15px;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
+        <input type="number" id="qx_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:12px; outline:none; font-size:16px;">
         
-        <label style="font-size:12px; color:#888; display:block; margin-bottom:8px; font-weight:600; text-transform:uppercase;">Operation Mode</label>
-        <div id="nj_mode_signal" class="nj-mode-btn">ONLY SIGNAL</div>
-        <div id="nj_mode_trade" class="nj-mode-btn active">NJ999 TRADE</div>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:2px;">After trade scan (seconds)</label>
+        <span style="font-size:11px; color:#777; display:block; margin-bottom:5px;">0 = stop only when you tap the icon</span>
+        <input type="number" id="qx_after_delay" value="5" min="0" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         
-        <button id="nj_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0,255,102,0.4);">Save & Apply</button>
-        <p style="font-size:11px; color:#666; text-align:center; margin-top:14px; margin-bottom:0;">Triple tap bot icon to open settings</p>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
+        <div id="qx_dir_up" class="qx-dir-btn">Up</div>
+        <div id="qx_dir_down" class="qx-dir-btn">Down</div>
+        <div id="qx_dir_random" class="qx-dir-btn active">Random</div>
+        
+        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save</button>
+        <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">3 taps on icon to open · tap outside to close</p>
     `;
     document.body.appendChild(settingsBox);
 
-    ['ONLY SIGNAL', 'NJ999 TRADE'].forEach(mode => {
-        let btnId = mode === 'ONLY SIGNAL' ? 'nj_mode_signal' : 'nj_mode_trade';
+    ['Up', 'Down', 'Random'].forEach(dir => {
+        let btnId = dir === 'Up' ? 'qx_dir_up' : (dir === 'Down' ? 'qx_dir_down' : 'qx_dir_random');
         document.getElementById(btnId).onclick = function () {
-            document.querySelectorAll('.nj-mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.qx-dir-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            operationMode = mode;
+            configuredTradeDirection = dir;
         };
     });
 
     let botContainer = document.createElement('div');
-    botContainer.id = 'nj999-circle-bot';
+    botContainer.id = 'qx999-circle-bot';
     botContainer.style.display = 'none';
 
     let logoIcon = document.createElement('div');
-    logoIcon.id = 'nj999-logo-icon';
+    logoIcon.id = 'qx999-logo-icon';
     let logoText = document.createElement('span');
-    logoText.innerText = "NJ999";
+    logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
-
-    let terminalBox = document.createElement('div');
-    terminalBox.id = 'nj999-terminal';
-    terminalBox.style.cssText = `
-        position: fixed;
-        width: 210px; background: rgba(8, 15, 10, 0.95); border: 1.5px solid #00ff66;
-        color: #00ff66; padding: 10px 12px; border-radius: 12px; font-family: monospace;
-        font-size: 12px; display: none; z-index: 999998; box-shadow: 0 0 15px rgba(0,255,102,0.2);
-        line-height: 1.4; pointer-events: none;
-    `;
-    document.body.appendChild(terminalBox);
-
-    function updateTerminalPosition() {
-        let rect = botContainer.getBoundingClientRect();
-        let termHeight = terminalBox.offsetHeight || 70;
-        terminalBox.style.top = (rect.top - termHeight - 8) + 'px';
-        terminalBox.style.left = (rect.left - 70) + 'px';
-    }
 
     let isDragging = false, hasMoved = false;
     let startX = 0, startY = 0, initialX = 0, initialY = 0;
@@ -197,7 +171,6 @@
         if (isDragging) {
             botContainer.style.left = (initialX + dx) + 'px';
             botContainer.style.top = (initialY + dy) + 'px';
-            updateTerminalPosition();
         }
     }
 
@@ -213,10 +186,10 @@
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
     let scanCanvas = document.createElement('canvas');
-    scanCanvas.id = 'nj999-scan-canvas';
+    scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        pointer-events: none; z-index: 999997; display: none;
+        pointer-events: none; z-index: 999998; display: none;
     `;
     document.body.appendChild(scanCanvas);
     let ctx = scanCanvas.getContext('2d');
@@ -228,18 +201,7 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    function getActiveMarketName() {
-        let candidates = document.querySelectorAll('.asset-name, .current-asset, [class*="asset"], [class*="symbol"], header span, div span');
-        for (let el of candidates) {
-            let text = el.innerText ? el.innerText.trim() : '';
-            if (text.match(/^[A-Z]{3}\/[A-Z]{3}/) || text.includes('(OTC)')) {
-                if (text.length < 20) return text;
-            }
-        }
-        let bodyText = document.body.innerText;
-        let match = bodyText.match(/[A-Z]{3}\/[A-Z]{3}(\s*\(OTC\))?/);
-        return match ? match[0] : "USD/BRL (OTC)";
-    }
+    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
 
     function startRealTimeAnalysis() {
         greenForce = 0;
@@ -251,7 +213,7 @@
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
-                let weight = 80;
+                let weight = 30;
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     greenForce += weight;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
@@ -263,18 +225,17 @@
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length >= 4) {
+            if (priceNodes.length >= 3) {
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
-                let diff = current - prev;
-                let multiplier = 200; 
-                if (diff > 0) {
+                let multiplier = 75;
+                if (current > prev) {
                     greenForce += multiplier;
-                } else if (diff < 0) {
+                } else if (current < prev) {
                     redForce += multiplier;
                 }
             }
-        }, 15);
+        }, 20);
     }
 
     function drawSmokeScanLine() {
@@ -302,36 +263,33 @@
         ctx.strokeStyle = '#00ff66';
         ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        // Slower movement step for smooth scanning line
-        scanY += 5;
+        scanY += 8.5;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             
-            if (greenForce > redForce) {
+            if (configuredTradeDirection === "Up") {
                 selectedSignal = "UP";
-            } else if (redForce > greenForce) {
+            } else if (configuredTradeDirection === "Down") {
                 selectedSignal = "DOWN";
             } else {
-                selectedSignal = "UP";
+                if (greenForce > redForce) {
+                    selectedSignal = "UP";
+                } else if (redForce > greenForce) {
+                    selectedSignal = "DOWN";
+                } else {
+                    selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                }
             }
-
-            let currentMarket = getActiveMarketName();
-            updateTerminalPosition();
-            terminalBox.style.display = 'block';
-            terminalBox.innerHTML = `root@nj999-ai:~$<br>analyzing...<br>market: ${currentMarket}<br>signal: <span style="color:${selectedSignal === 'UP' ? '#00ff66' : '#ff3333'}; font-weight:bold;">${selectedSignal}</span>`;
-
-            if (operationMode === "NJ999 TRADE") {
-                executeTrade(selectedSignal);
-            }
+            executeTrade(selectedSignal);
         }
 
         scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
@@ -344,11 +302,8 @@
             cancelAnimationFrame(scanAnimationId);
             scanAnimationId = null;
         }
+        botContainer.classList.remove('glowing');
         isScanning = false;
-        
-        setTimeout(() => {
-            terminalBox.style.display = 'none';
-        }, 4000);
     }
 
     function executeTrade(direction) {
@@ -374,19 +329,19 @@
         }
     }
 
-    document.getElementById('nj_login_btn').onclick = function () {
-        let inputPass = document.getElementById('nj_pass').value;
+    document.getElementById('qx_login_btn').onclick = function () {
+        let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             loginBox.remove();
             botContainer.style.display = 'flex';
-        } else {
-            alert("Invalid Access Key! Use: ALVI5S-NJ99");
         }
     };
 
-    document.getElementById('nj_save_btn').onclick = function () {
-        let scanInput = parseFloat(document.getElementById('nj_scan_delay').value);
-        if (!isNaN(scanInput) && scanInput >= 3) scanDurationSec = scanInput;
+    document.getElementById('qx_save_btn').onclick = function () {
+        let scanInput = parseFloat(document.getElementById('qx_scan_delay').value);
+        let afterInput = parseFloat(document.getElementById('qx_after_delay').value);
+        if (!isNaN(scanInput) && scanInput >= 2) scanDurationSec = scanInput;
+        if (!isNaN(afterInput) && afterInput >= 0) afterTradeScanSec = afterInput;
 
         settingsBox.style.display = 'none';
         isConfigured = true;
@@ -417,15 +372,11 @@
 
                 isScanning = true;
                 tradeExecuted = false;
+                botContainer.classList.add('glowing');
                 scanCanvas.style.display = 'block';
                 scanY = 0;
                 scanStartTime = Date.now();
                 
-                let currentMarket = getActiveMarketName();
-                updateTerminalPosition();
-                terminalBox.style.display = 'block';
-                terminalBox.innerHTML = `root@nj999-ai:~$<br>analyzing...<br>market: ${currentMarket}`;
-
                 startRealTimeAnalysis();
                 drawSmokeScanLine();
             }
